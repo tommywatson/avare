@@ -64,8 +64,8 @@ public class AreaMapper {
         double dlon = -(lonc - lon);
         double y = (dlat / py); // pixels from center
         double x = (dlon / px); // pixels from center
-        double ynorm = y / ((double)BitmapHolder.HEIGHT) * 2;
-        double xnorm = x / ((double)BitmapHolder.WIDTH) * 2;
+        double ynorm = y / ((double)BitmapHolder.HEIGHT);
+        double xnorm = x / ((double)BitmapHolder.WIDTH);
 
         double alt = Helper.findPixelFromElevationNormalized(altitude) * mRatio;
 
@@ -142,7 +142,8 @@ public class AreaMapper {
                  * Meters per pixel of altitude divided by Meters per pixel on ground for particular zoom.
                  * This will give height to terrain in proportion with ground
                  */
-                mRatio = 2.0f * (float)(Helper.ALTITUDE_FT_ELEVATION_PER_PIXEL_SLOPE / Preferences.heightConversion / Epsg900913.getResolution(tile.getZoom())); //2.0 because +z for height while -x to +x for ground
+
+                mRatio = (float)(Helper.ALTITUDE_FT_ELEVATION_PER_PIXEL_SLOPE / Preferences.heightConversion / Epsg900913.getResolution(tile.getZoom()));
                 mNewElevationTile = true;
             }
         }

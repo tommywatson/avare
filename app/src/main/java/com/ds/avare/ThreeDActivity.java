@@ -21,6 +21,7 @@ import android.content.ServiceConnection;
 import android.content.pm.ConfigurationInfo;
 import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
+import android.graphics.Rect;
 import android.location.GpsStatus;
 import android.location.Location;
 import android.os.Build;
@@ -306,14 +307,17 @@ public class ThreeDActivity extends Activity {
                                     mHandler.sendMessage(m);
 
                                     // load tiles but give feedback as it hangs
+                                    // Main bitmap used for creating map terrain and
+                                    BitmapHolder mainBitmap = new BitmapHolder(BitmapHolder.WIDTH * 2, BitmapHolder.HEIGHT * 2);
+
+
                                     Tile tout = mAreaMapper.getMapTile();
-                                    BitmapHolder b = new BitmapHolder(mPref.mapsFolder() + "/" + tout.getName());
-                                    mRenderer.setTexture(b);
-                                    b.recycle();
+                                    loadTiles(tout, mainBitmap);
+                                    mRenderer.setTexture(mainBitmap);
                                     tout = mAreaMapper.getElevationTile();
-                                    b = new BitmapHolder(mPref.mapsFolder() + "/" + tout.getName(), Bitmap.Config.ARGB_8888);
-                                    mRenderer.setTerrain(b, mAreaMapper.getTerrainRatio());
-                                    b.recycle();
+                                    loadTiles(tout, mainBitmap);
+                                    mRenderer.setTerrain(mainBitmap, mAreaMapper.getTerrainRatio());
+                                    mainBitmap.recycle();
 
                                     // show errors
                                     m = mHandler.obtainMessage();
@@ -420,6 +424,96 @@ public class ThreeDActivity extends Activity {
 
     }
 
+    /**
+     * Make a tile map
+     * @param center
+     */
+    private void loadTiles(Tile center, BitmapHolder bitmap) {
+
+        String path = mPref.mapsFolder() + "/";
+        bitmap.getBitmap().eraseColor(0);
+
+        // load tiles
+        String name;
+        Rect src;
+        Rect dst;
+        BitmapHolder b;
+
+        // load nine tiles in an arranged bitmap
+
+        // top left
+        name = path + center.getTileNeighbor(-1, 1);
+        b = new BitmapHolder(name, Bitmap.Config.ARGB_8888);
+        src = new Rect(BitmapHolder.WIDTH / 2, BitmapHolder.HEIGHT / 2, BitmapHolder.WIDTH, BitmapHolder.HEIGHT);
+        dst = new Rect(0, 0, BitmapHolder.WIDTH / 2, BitmapHolder.HEIGHT / 2);
+        bitmap.drawInBitmap(b, "", src, dst);
+        b.recycle();
+
+        // top middle
+        name = path + center.getTileNeighbor(0, 1);
+        b = new BitmapHolder(name, Bitmap.Config.ARGB_8888);
+        src = new Rect(0, BitmapHolder.HEIGHT / 2, BitmapHolder.WIDTH, BitmapHolder.HEIGHT);
+        dst = new Rect(BitmapHolder.WIDTH / 2, 0, (BitmapHolder.WIDTH * 3) / 2, BitmapHolder.HEIGHT / 2);
+        bitmap.drawInBitmap(b, "", src, dst);
+        b.recycle();
+
+        // top right
+        name = path + center.getTileNeighbor(1, 1);
+        b = new BitmapHolder(name, Bitmap.Config.ARGB_8888);
+        src = new Rect(0, BitmapHolder.HEIGHT / 2, BitmapHolder.WIDTH / 2, BitmapHolder.HEIGHT);
+        dst = new Rect((BitmapHolder.WIDTH * 3) / 2, 0, BitmapHolder.WIDTH * 2, BitmapHolder.HEIGHT / 2);
+        bitmap.drawInBitmap(b, "", src, dst);
+        b.recycle();
+
+        // middle left
+        name = path + center.getTileNeighbor(-1, 0);
+        b = new BitmapHolder(name, Bitmap.Config.ARGB_8888);
+        src = new Rect(BitmapHolder.WIDTH / 2, 0, BitmapHolder.WIDTH, BitmapHolder.HEIGHT);
+        dst = new Rect(0, BitmapHolder.HEIGHT / 2, BitmapHolder.WIDTH / 2, (BitmapHolder.HEIGHT * 3) / 2);
+        bitmap.drawInBitmap(b, "", src, dst);
+        b.recycle();
+
+        // middle
+        name = path + center.getTileNeighbor(0, 0);
+        b = new BitmapHolder(name, Bitmap.Config.ARGB_8888);
+        src = new Rect(0, 0, BitmapHolder.WIDTH, BitmapHolder.HEIGHT);
+        dst = new Rect(BitmapHolder.WIDTH / 2, BitmapHolder.HEIGHT / 2, (BitmapHolder.WIDTH * 3) / 2, (BitmapHolder.HEIGHT * 3) / 2);
+        bitmap.drawInBitmap(b, "", src, dst);
+        b.recycle();
+
+        // middle right
+        name = path + center.getTileNeighbor(1, 0);
+        b = new BitmapHolder(name, Bitmap.Config.ARGB_8888);
+        src = new Rect(0, 0, BitmapHolder.WIDTH / 2, BitmapHolder.HEIGHT);
+        dst = new Rect((BitmapHolder.WIDTH * 3) / 2, BitmapHolder.HEIGHT / 2, BitmapHolder.WIDTH * 2, (BitmapHolder.HEIGHT * 3) / 2);
+        bitmap.drawInBitmap(b, "", src, dst);
+        b.recycle();
+
+        // bottom left
+        name = path + center.getTileNeighbor(-1, -1);
+        b = new BitmapHolder(name, Bitmap.Config.ARGB_8888);
+        src = new Rect(BitmapHolder.WIDTH / 2, 0, BitmapHolder.WIDTH, BitmapHolder.HEIGHT / 2);
+        dst = new Rect(0, (BitmapHolder.HEIGHT * 3) / 2, BitmapHolder.WIDTH / 2, BitmapHolder.HEIGHT * 2);
+        bitmap.drawInBitmap(b, "", src, dst);
+        b.recycle();
+
+        // bottom middle
+        name = path + center.getTileNeighbor(0, -1);
+        b = new BitmapHolder(name, Bitmap.Config.ARGB_8888);
+        src = new Rect(0, 0, BitmapHolder.WIDTH, BitmapHolder.HEIGHT / 2);
+        dst = new Rect(BitmapHolder.WIDTH / 2, (BitmapHolder.HEIGHT * 3) / 2, (BitmapHolder.WIDTH * 3) / 2, BitmapHolder.HEIGHT * 2);
+        bitmap.drawInBitmap(b, "", src, dst);
+        b.recycle();
+
+        //bottom right
+        name = path + center.getTileNeighbor(1, -1);
+        b = new BitmapHolder(name, Bitmap.Config.ARGB_8888);
+        src = new Rect(0, 0, BitmapHolder.WIDTH / 2, BitmapHolder.HEIGHT / 2);
+        dst = new Rect((BitmapHolder.WIDTH * 3) / 2, (BitmapHolder.HEIGHT * 3) / 2, BitmapHolder.WIDTH * 2, BitmapHolder.HEIGHT * 2);
+        bitmap.drawInBitmap(b, "", src, dst);
+        b.recycle();
+
+    }
 
     /** Defines callbacks for service binding, passed to bindService() */
     /**
@@ -456,8 +550,8 @@ public class ThreeDActivity extends Activity {
      * @return
      */
     private double getElevation(double lon, double lat) {
-        int x = (int)mAreaMapper.getXForLon(lon);
-        int y = (int)mAreaMapper.getYForLat(lat);
+        int x = (int)mAreaMapper.getXForLon(lon) + BitmapHolder.WIDTH / 2;
+        int y = (int)mAreaMapper.getYForLat(lat) + BitmapHolder.HEIGHT / 2;
         // Find from Map
         double elev = mRenderer.getElevationNormalized(y, x, mAreaMapper.getTerrainRatio());
         if(elev <= -1) {

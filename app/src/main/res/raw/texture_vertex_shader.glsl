@@ -11,6 +11,7 @@ varying vec2 v_TextureCoordinates;
 
 const float ONE_OVER_64  = 0.015625;
 const float ONE_OVER_512 = 0.001953125;
+const float ONE_OVER_1024 = 0.000976563;
 const float ONE_OVER_256 = 0.00390625;
 
 void main()                    
@@ -28,8 +29,8 @@ void main()
 
     //-1,1    1,1
     //-1,-1   1,-1
-    vec4 ap = vec4(col * ONE_OVER_256 - 1.0, row * -ONE_OVER_256 + 1.0, ht, 1.0);
-    vec2 at = vec2(col * ONE_OVER_512, row * ONE_OVER_512);
+    vec4 ap = vec4(col * ONE_OVER_512 - 1.0, row * -ONE_OVER_512 + 1.0, ht, 1.0);
+    vec2 at = vec2(col * ONE_OVER_1024, row * ONE_OVER_1024);
     v_TextureCoordinates = at;
     gl_Position = u_Matrix * ap;
 }

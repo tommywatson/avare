@@ -21,8 +21,8 @@ import static android.opengl.GLES20.glDrawArrays;
 
 public class Map {
 
-    private static final int ROWS = BitmapHolder.HEIGHT;
-    private static final int COLS = BitmapHolder.WIDTH;
+    private static final int ROWS = BitmapHolder.HEIGHT * 2; // 1024 x 1024
+    private static final int COLS = BitmapHolder.WIDTH * 2;
 
     public static final int COMPONENTS = 2;
     private static final int STRIDE = COMPONENTS * Constants.BYTES_PER_SHORT;

@@ -140,7 +140,9 @@ public class IHelperService extends Service {
                 double idNext = -1;
                 double idOrig = -1;
                 double deviation = 0;
-                
+                double bearingTrue = 0;
+                double bearingMagnetic = 0;
+
                 // If destination set, send how to get there (for autopilots).
                 if(d != null) {
                     distance = d.getDistance();

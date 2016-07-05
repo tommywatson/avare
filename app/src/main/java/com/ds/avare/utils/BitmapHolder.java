@@ -12,16 +12,17 @@ Redistribution and use in source and binary forms, with or without modification,
 
 package com.ds.avare.utils;
 
-import java.io.File;
-
-import com.ds.avare.position.Origin;
-import com.ds.avare.storage.Preferences;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Rect;
+
+import com.ds.avare.position.Origin;
+import com.ds.avare.storage.Preferences;
+
+import java.io.File;
 
 /**
  * @author zkhan
@@ -158,6 +159,28 @@ public class BitmapHolder {
         }
         mTransform.setTranslate(x, y);
         mCanvas.drawBitmap(b.getBitmap(), mTransform, null);
+    }
+
+    /**
+     *
+     * @param b is bitmap to draw
+     * @param name is the name to store
+     */
+    public void drawInBitmap(BitmapHolder b, String name, Rect src, Rect dst) {
+        /*
+         * This should mark bitmap dirty
+         */
+        mName = name;
+        if(null == name) {
+            return;
+        }
+        if((null == b) || (null == mCanvas)) {
+            return;
+        }
+        if(null == b.getBitmap()) {
+            return;
+        }
+        mCanvas.drawBitmap(b.getBitmap(), src, dst, null);
     }
 
     /**
