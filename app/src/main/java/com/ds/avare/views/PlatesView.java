@@ -284,13 +284,18 @@ public class PlatesView extends View implements MultiTouchObjectCanvas<Object>, 
             return;
         }
 
-        /*
-         * Get draw points.
-         */
-        mPaint.setColor(Color.BLUE);
-        mPaint.setStrokeWidth(4 * mDipToPix);
+
+        Paint.Cap oldCaps = mPaint.getStrokeCap();
+        mPaint.setStrokeCap(Paint.Cap.ROUND); // We use a wide line. Without ROUND the line looks broken.
+        mPaint.setColor(Color.BLACK);
+        mPaint.setStrokeWidth(6 * mDipToPix);
         mService.getPixelDraw().drawShape(canvas, mPaint);
-        
+
+        mPaint.setColor(Color.BLUE);
+        mPaint.setStrokeWidth(2 * mDipToPix);
+        mService.getPixelDraw().drawShape(canvas, mPaint);
+        mPaint.setStrokeCap(oldCaps); // Restore the Cap we had before drawing
+
     }
 
     /**
@@ -403,7 +408,7 @@ public class PlatesView extends View implements MultiTouchObjectCanvas<Object>, 
             // Add plates tag PG's website
             mPaint.setColor(0x007F00);
             mPaint.setAlpha(255);
-            canvas.drawText(mContext.getString(R.string.VerifyPlates), x, mPaint.getFontMetrics().bottom - mPaint.getFontMetrics().top, mPaint);
+            canvas.drawText(mContext.getString(R.string.VerifyPlates), x, mPaint.getFontMetrics().bottom - mPaint.getFontMetrics().top + getWidth() / 4, mPaint);
 
             if(mPref.isNightMode()) {
                 Helper.invertCanvasColors(mPaint);

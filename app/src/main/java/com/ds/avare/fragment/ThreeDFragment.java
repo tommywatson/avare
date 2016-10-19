@@ -21,6 +21,7 @@ import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
 import android.location.GpsStatus;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -34,6 +35,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.view.Window;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.ds.avare.R;
@@ -48,6 +51,7 @@ import com.ds.avare.storage.Preferences;
 import com.ds.avare.threed.AreaMapper;
 import com.ds.avare.threed.TerrainRenderer;
 import com.ds.avare.threed.data.Vector4d;
+import com.ds.avare.threed.objects.Map;
 import com.ds.avare.utils.BitmapHolder;
 import com.ds.avare.utils.GenericCallback;
 import com.ds.avare.utils.Helper;
@@ -80,7 +84,7 @@ public class ThreeDFragment extends Fragment {
 
     private AreaMapper mAreaMapper;
 
-    private Button mCenterButton;
+    private ImageButton mCenterButton;
     private TextView mText;
     private CoordinatorLayout mCoordinatorLayout;
 
@@ -97,12 +101,17 @@ public class ThreeDFragment extends Fragment {
     private Location mLocation;
     private long mTime;
 
+    private BitmapHolder mTempBitmap;
+    private short[] mVertices;
 
     /**
      * Hold a reference to our GLSurfaceView
      */
     private ThreeDSurfaceView mGlSurfaceView;
     private TerrainRenderer mRenderer = null;
+
+    // This task loads bitmaps and makes elevation vertices in background
+    private AsyncTask<Object, Void, Float> mLoadTask;
 
     private static final int MESSAGE_INIT = 0;
     private static final int MESSAGE_TEXT = 1;
@@ -153,8 +162,8 @@ public class ThreeDFragment extends Fragment {
     private void setCenterButton() {
         // Button colors to be synced across activities
         if (mPref.isFirstPerson()) {
-            mCenterButton.getBackground().setColorFilter(0xFF00FF00, PorterDuff.Mode.MULTIPLY);
-            Snackbar.make(mCoordinatorLayout, getString(R.string.FirstPerson), Snackbar.LENGTH_SHORT).show();
+            mCenterButton.getBackground().setColorFilter(0xFF71BC78, PorterDuff.Mode.MULTIPLY);
+            mToast.setText(getString(R.string.FirstPerson));
             mRenderer.getCamera().setFirstPerson(true);
             mGlSurfaceView.init();
         } else {
@@ -230,13 +239,21 @@ public class ThreeDFragment extends Fragment {
                     }
                     else if (((String) o1).equals(TerrainRenderer.DRAW_FRAME)) {
 
-                        // Draw traffic every so many frames
+                        // Do heavy load stuff every second
                         if ((System.currentTimeMillis() - 1000) > mTime) {
 
                             Location location = null;
                             // Simulate destination in sim mode and get altitude from terrain
-                            if (mPref.isSimulationMode() && mService != null && mService.getDestination() != null) {
-                                Location l = mService.getDestination().getLocation();
+                            if (mPref.isSimulationMode() && mService != null) {
+                                Location l = new Location("");
+                                if(mService.getDestination() != null) {
+                                    l = mService.getDestination().getLocation();
+                                }
+                                else if(mService.getGpsParams() != null) {
+                                    l.setLatitude(mService.getGpsParams().getLatitude());
+                                    l.setLongitude(mService.getGpsParams().getLongitude());
+                                    l.setBearing((float) mService.getGpsParams().getBearing());
+                                }
                                 l.setAltitude(Helper.ALTITUDE_FT_ELEVATION_PER_PIXEL_SLOPE / 2.0 +  // give margin for rounding in chart so we dont go underground
                                         getElevation(l.getLongitude(), l.getLatitude()) / Preferences.heightConversion);
                                 location = l;
@@ -289,36 +306,82 @@ public class ThreeDFragment extends Fragment {
                                 mAreaMapper.setElevationTile(te);
 
                                 if (mAreaMapper.isMapTileNew() || mAreaMapper.isElevationTileNew()) {
-                                    Message m = mHandler.obtainMessage();
-                                    m.obj = mContext.getString(R.string.LoadingMaps);
-                                    m.what = MESSAGE_TEXT;
-                                    mHandler.sendMessage(m);
 
-                                    // load tiles but give feedback as it hangs
-                                    Tile tout = mAreaMapper.getMapTile();
-                                    BitmapHolder b = new BitmapHolder(mPref.mapsFolder() + "/" + tout.getName());
-                                    mRenderer.setTexture(b);
-                                    b.recycle();
-                                    tout = mAreaMapper.getElevationTile();
-                                    b = new BitmapHolder(mPref.mapsFolder() + "/" + tout.getName(), Bitmap.Config.ARGB_8888);
-                                    mRenderer.setTerrain(b, mAreaMapper.getTerrainRatio());
-                                    b.recycle();
-
-                                    // show errors
-                                    m = mHandler.obtainMessage();
-                                    m.what = MESSAGE_TEXT;
-                                    if (!mRenderer.isMapSet()) {
-                                        m.obj = mContext.getString(R.string.MissingElevation);
-                                    } else if (!mRenderer.isTextureSet()) {
-                                        m.obj = mContext.getString(R.string.MissingMaps);
-                                    } else {
-                                        m.obj = mContext.getString(R.string.Ready);
+                                    if(mLoadTask != null) {
+                                        if(mLoadTask.getStatus() == AsyncTask.Status.RUNNING) {
+                                            mLoadTask.cancel(false);
+                                        }
                                     }
 
-                                    mHandler.sendMessage(m);
+                                    mLoadTask = new AsyncTask<Object, Void, Float>() {
+
+                                        @Override
+                                        protected Float doInBackground(Object... params) {
+                                            // load tiles for elevation
+                                            if(mTempBitmap != null) {
+                                                mTempBitmap.recycle();
+                                            }
+                                            mTempBitmap = new BitmapHolder((String)params[0], Bitmap.Config.ARGB_8888);
+                                            mVertices = Map.genTerrainFromBitmap(mTempBitmap.getBitmap());
+                                            mTempBitmap.recycle();
+                                            // load tiles for map/texture
+                                            if(mPref.getChartType3D().equals("6")) {
+                                                // Show palette when elevation is chosen for height guidance
+                                                mTempBitmap = new BitmapHolder(mContext, R.drawable.palette);
+                                                mRenderer.setAltitude((float)Helper.findPixelFromElevation((float)mAreaMapper.getGpsParams().getAltitude()));
+                                            }
+                                            else {
+                                                mTempBitmap = new BitmapHolder((String) params[1]);
+                                                mRenderer.setAltitude(256); // this tells shader to skip palette for texture
+                                            }
+                                            return (Float)params[2];
+                                        }
+
+                                        @Override
+                                        protected void onPreExecute () {
+                                            // Show we are loading new data
+                                            Message m = mHandler.obtainMessage();
+                                            m.obj = mContext.getString(R.string.LoadingMaps);
+                                            m.what = MESSAGE_TEXT;
+                                            mHandler.sendMessage(m);
+                                        }
+
+                                        @Override
+                                        protected void onPostExecute(Float arg) {
+                                            final float ratio = arg;
+                                            // Tell GL that new stuff is ready which will be loaded in Runnable
+                                            mGlSurfaceView.queueEvent(
+                                                    new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            mRenderer.setTexture(mTempBitmap);
+                                                            mRenderer.setTerrain(mVertices, ratio);
+                                                            // show errors or success
+                                                            Message m = mHandler.obtainMessage();
+                                                            m.what = MESSAGE_TEXT;
+                                                            if (!mRenderer.isMapSet()) {
+                                                                m.obj = mContext.getString(R.string.MissingElevation);
+                                                            } else if (!mRenderer.isTextureSet()) {
+                                                                m.obj = mContext.getString(R.string.MissingMaps);
+                                                            } else {
+                                                                m.obj = mContext.getString(R.string.Ready);
+                                                            }
+                                                            mHandler.sendMessage(m);
+                                                        }
+                                                    });
+                                        }
+                                    };
+                                    mLoadTask.execute(
+                                            mPref.mapsFolder() + "/" + mAreaMapper.getElevationTile().getName(),
+                                            mPref.mapsFolder() + "/" + mAreaMapper.getMapTile().getName(),
+                                            mAreaMapper.getTerrainRatio());
                                 }
                             }
 
+                            if(mPref.getChartType3D().equals("6")) {
+                                // Show palette when elevation is chosen for height guidance
+                                mRenderer.setAltitude((float)Helper.findPixelFromElevation((float)mAreaMapper.getGpsParams().getAltitude()));
+                            }
 
                             // Draw traffic
                             Traffic.draw(mService, mAreaMapper, mRenderer);
@@ -367,7 +430,7 @@ public class ThreeDFragment extends Fragment {
 
         mAreaMapper = new AreaMapper();
 
-        mCenterButton = (Button) view.findViewById(R.id.threed_button_center);
+        mCenterButton = (ImageButton) view.findViewById(R.id.threed_button_center);
         mCenterButton.getBackground().setAlpha(255);
         mCenterButton.setOnClickListener(new View.OnClickListener() {
 

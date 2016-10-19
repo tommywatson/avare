@@ -65,6 +65,7 @@ public class TerrainRenderer implements GLSurfaceView.Renderer {
     private Camera mCamera;
     private Orientation mOrientation;
 
+    private float mAltitude; // current height
     private Map mMap;
     private Ship mShip;
     private OwnShip mOwnShip;
@@ -171,7 +172,8 @@ public class TerrainRenderer implements GLSurfaceView.Renderer {
             mTextureProgram.setUniformsHeight(
                     (float)Helper.ALTITUDE_FT_ELEVATION_PER_PIXEL_SLOPE,
                     (float)Helper.ALTITUDE_FT_ELEVATION_PER_PIXEL_INTERCEPT,
-                    mMap.getRatio() / (float)Helper.ALTITUDE_FT_ELEVATION_PLUSZ);
+                    mMap.getRatio() / (float)Helper.ALTITUDE_FT_ELEVATION_PLUSZ,
+                    mAltitude);
             mMap.bindData(mTextureProgram);
             mMap.draw();
 
@@ -197,9 +199,14 @@ public class TerrainRenderer implements GLSurfaceView.Renderer {
         mTextureSet = mTexture != 0;
     }
 
-    public void setTerrain(BitmapHolder b, float ratio) {
-        mMapSet = mMap.loadTerrain(b, ratio);
+    public void setTerrain(short vertexArray[], float ratio) {
+        mMapSet = mMap.loadTerrain(vertexArray, ratio);
     }
+
+    public void setAltitude(float alt) {
+        mAltitude = alt;
+    }
+
 
     public void setShips(Vector4d traffic[]) {
         if(traffic != null) {

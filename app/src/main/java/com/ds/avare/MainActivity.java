@@ -177,6 +177,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         tabLayout.addTab(tabLayout.newTab().setText(R.string.Main), tabIndex, true);
         mTabIndexToNavItemIdMap.put(tabIndex++, NAV_ITEM_IDX_MAP);
 
+/*
         if (0 != (mPref.getTabs() & (1 << MainActivity.NAV_ITEM_IDX_PLATES))) {
             tabLayout.addTab(tabLayout.newTab().setText(R.string.Plates), tabIndex, false);
             mTabIndexToNavItemIdMap.put(tabIndex++, NAV_ITEM_IDX_PLATES);
@@ -196,6 +197,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             tabLayout.addTab(tabLayout.newTab().setText(R.string.Plan), tabIndex, false);
             mTabIndexToNavItemIdMap.put(tabIndex++, NAV_ITEM_IDX_PLAN);
         }
+*/
+        // We will always show the main chart tab
+    	setupTab(new TextView(this), getString(R.string.Main), new Intent(this, LocationActivity.class), getIntent());
+        setupTab(new TextView(this), getString(R.string.Plates), new Intent(this, PlatesActivity.class), getIntent());
+        setupTab(new TextView(this), getString(R.string.AFD), new Intent(this, AirportActivity.class), getIntent());
+        setupTab(new TextView(this), getString(R.string.Find), new Intent(this, SearchActivity.class), getIntent());
+        setupTab(new TextView(this), getString(R.string.Plan), new Intent(this, PlanActivity.class), getIntent());
 
         if (0 != (mPref.getTabs() & (1 << MainActivity.NAV_ITEM_IDX_NEAR))) {
             tabLayout.addTab(tabLayout.newTab().setText(R.string.Near), tabIndex, false);
@@ -342,11 +350,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             }
         }
+/*<<<<<<< HEAD
 
         // redraw the toolbar menu
         invalidateOptionsMenu();
 
         return true;
+=======
+*/
+        View tabview = createTabView(mTabHost.getContext(), tag);
+
+        TabSpec setContent = mTabHost.newTabSpec(tag).setIndicator(tabview).setContent(i);
+        mTabHost.addTab(setContent);
     }
 
     @Override
@@ -534,7 +549,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         /*
          * Start service now, bind later. This will be no-op if service is already running
          */
-        if (!mPref.shouldLeaveRunning()) {
+        if(!mPref.isLeaveRunning()) {
             if (isFinishing()) {
                 /*
                  * Do not kill on orientation change

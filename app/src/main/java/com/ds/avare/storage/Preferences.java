@@ -311,24 +311,18 @@ public class Preferences {
         return ret;
     }
 
-    /**
-     * @return
-     */
-    public boolean shouldLeaveRunning() {
+    public boolean isLeaveRunning() {
         return (mPref.getBoolean(mContext.getString(R.string.LeaveRunning), true));
     }
 
     /**
      * @return
      */
-    public boolean shouldShowBackground() {
+    public boolean isShowBackground() {
         return (mPref.getBoolean(mContext.getString(R.string.Background), true));
     }
 
-    /**
-     * @return
-     */
-    public boolean shouldShowAllFacilities() {
+    public boolean isShowAllFacilities() {
         return (mPref.getBoolean(mContext.getString(R.string.AllFacilities), false));
     }
 
@@ -346,20 +340,19 @@ public class Preferences {
         return (mPref.getBoolean(mContext.getString(R.string.XlateWeather), false));
     }
 
-    /**
-     * @return
-     */
-    public boolean shouldExtendRunways() {
+    public boolean isExtendRunways() {
         return (mPref.getBoolean(mContext.getString(R.string.Runways), true));
     }
 
-    /**
-     * @return
-     */
-    public boolean shouldAutoDisplayAirportDiagram() {
+    public boolean isAutoDisplayAirportDiagram() {
         return (mPref.getBoolean(mContext.getString(R.string.AutoShowAirportDiagram), false));
     }
-
+    public boolean isShowLabelMETARS() {
+        return (mPref.getBoolean(mContext.getString(R.string.ShowLabelMETARS), false));
+    }
+    public boolean isShowWindBarbs() {
+        return (mPref.getBoolean(mContext.getString(R.string.ShowWindBarbs), false));
+    }
     /**
      * @return
      */
@@ -378,6 +371,17 @@ public class Preferences {
         return 0;
     }
 
+    // An int value that represents the seconds before the waypoint to advance
+    // to the next leg
+    public int getEarlyPassTimer() {
+        String val = mPref.getString(mContext.getString(R.string.EarlyPassTimer), "10");
+        try {
+            return (Integer.parseInt(val));
+        } catch (Exception e) {
+        }
+        return 10;
+    }
+
     /**
      * Get chart cycle previous, next, current
      *
@@ -392,10 +396,7 @@ public class Preferences {
         return 0;
     }
 
-    /**
-     * @return
-     */
-    public boolean shouldGpsWarn() {
+    public boolean isGpsWarn() {
         return (mPref.getBoolean(mContext.getString(R.string.GpsOffWarn), true));
     }
 
@@ -406,11 +407,8 @@ public class Preferences {
         return (mPref.getString(mContext.getString(R.string.OrientationP), "Portrait"));
     }
 
-    /**
-     * @return
-     */
-    public boolean shouldScreenStayOn() {
-        return (mPref.getBoolean(mContext.getString(R.string.ScreenOn), true));
+    public boolean isKeepScreenOn() {
+        return (mPref.getBoolean(mContext.getString(R.string.KeepScreenOn), true));
     }
 
     /**
@@ -584,10 +582,7 @@ public class Preferences {
         return (mPref.getString(name, null));
     }
 
-    /**
-     * @return
-     */
-    public boolean shouldDrawTracks() {
+    public boolean isDrawTracks() {
         return (mPref.getBoolean(mContext.getString(R.string.TrkUpdShowHistory), false));
     }
 
@@ -646,6 +641,15 @@ public class Preferences {
     }
 
     /**
+     *
+     *
+     * @return
+     */
+    public void showDistanceRingStatic() {
+        mPref.edit().putString(mContext.getString(R.string.prefDistanceRingType), "2").commit();
+    }
+
+    /**
      * @return
      */
     public int getDistanceRingColor() {
@@ -685,10 +689,7 @@ public class Preferences {
         return mPref.getBoolean(mContext.getString(R.string.prefUseDynamicFields), true);
     }
 
-    /**
-     * @return
-     */
-    public boolean shouldBlinkScreen() {
+    public boolean isBlinkScreen() {
         return mPref.getBoolean(mContext.getString(R.string.blinkScreen), false);
     }
 
@@ -755,7 +756,7 @@ public class Preferences {
     /**
      * @return
      */
-    public boolean shouldShowEdgeTape() {
+    public boolean isShowEdgeTape() {
         return mPref.getBoolean(mContext.getString(R.string.EdgeTape), false);
     }
 
@@ -806,13 +807,6 @@ public class Preferences {
      */
     public boolean allowRubberBanding() {
         return mPref.getBoolean(mContext.getString(R.string.rubberBand), true);
-    }
-
-    /**
-     * @return
-     */
-    public boolean showGameTFRs() {
-        return mPref.getBoolean(mContext.getString(R.string.GameTFR), false);
     }
 
     /**
@@ -1038,12 +1032,17 @@ public class Preferences {
         return mPref.getBoolean(mContext.getString(R.string.prefPlanControl), false);
     }
 
+/*<<<<<<< HEAD
     public boolean setPlanControl(boolean planControl) {
         return mPref.edit().putBoolean(mContext.getString(R.string.prefPlanControl), planControl).commit();
     }
 
     public boolean getHideTabBar() {
         return mPref.getBoolean(mContext.getString(R.string.HideTabBar), false);
+=======
+*/
+    public boolean getPlanPassage() {
+        return mPref.getBoolean(mContext.getString(R.string.prefPlanPassage), false);
     }
 
     // Get last location known
@@ -1127,7 +1126,11 @@ public class Preferences {
     }
 
     public String getAircraftEquipment() {
-        return mPref.getString(mContext.getString(R.string.AircraftEquipment), "A");
+        return mPref.getString(mContext.getString(R.string.AircraftEquipment), "N");
+    }
+
+    public String getAircraftSurveillanceEquipment() {
+        return mPref.getString(mContext.getString(R.string.AircraftSurveillance), "N");
     }
 
     public String getAircraftColorPrimary() {
@@ -1140,6 +1143,14 @@ public class Preferences {
 
     public String getAircraftType() {
         return mPref.getString(mContext.getString(R.string.AircraftType), "TEST");
+    }
+
+    public String getEmergencyNumber() {
+        return mPref.getString(mContext.getString(R.string.EmergencyContact), "");
+    }
+
+    public String getEmergencyChecklist() {
+        return mPref.getString(mContext.getString(R.string.EmergencyChecklist), "");
     }
 
     public int getAircraftICAOCode() {
@@ -1179,4 +1190,36 @@ public class Preferences {
     public boolean isTileSize256() {
         return mPref.getBoolean(mContext.getString(R.string.TileSize), false);
     }
+
+    public float getFuelBurn() {
+        try {
+            return (Float.parseFloat(mPref.getString(mContext.getString(R.string.FuelRateLabel), "10")));
+        } catch (Exception x) {
+            return 10;
+        }
+    }
+
+    public boolean removeB1Plate() {
+        return mPref.getBoolean(mContext.getString(R.string.b1plate), false);
+    }
+    public boolean removeB2Plate() {
+        return mPref.getBoolean(mContext.getString(R.string.b2plate), false);
+    }
+    public boolean removeB3Plate() {
+        return mPref.getBoolean(mContext.getString(R.string.b3plate), false);
+    }
+    public boolean removeB1Map() {
+        return mPref.getBoolean(mContext.getString(R.string.b1map), false);
+    }
+
+    public int getRateAskCount() {
+        return mPref.getInt("rateAskLastCount", 0);
+    }
+
+    public void setRateAskCount(int set) {
+        mPref.edit().putInt("rateAskLastCount", set).commit();
+    }
+
 }
+
+

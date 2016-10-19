@@ -21,6 +21,8 @@ import com.ds.avare.utils.GenericCallback;
 import com.ds.avare.utils.Helper;
 import com.ds.avare.webinfc.WebAppListInterface;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -41,10 +43,20 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.ProgressBar;
+
+import com.ds.avare.gps.GpsInterface;
+import com.ds.avare.utils.DecoratedAlertDialogBuilder;
+import com.ds.avare.utils.GenericCallback;
+import com.ds.avare.utils.Helper;
+import com.ds.avare.webinfc.WebAppListInterface;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * @author zkhan
@@ -156,6 +168,7 @@ public class ChecklistFragment extends Fragment {
                  * things might have changed.
                  * When both service and page loaded then proceed.
                  */
+/*<<<<<<< HEAD:app/src/main/java/com/ds/avare/fragment/ChecklistFragment.java
                 if(100 == progress) {
                     mIsPageLoaded = true;
                 }
@@ -190,6 +203,42 @@ public class ChecklistFragment extends Fragment {
             }
 
         });
+=======
+*/
+	     		if(100 == progress) {
+		     		mIsPageLoaded = true;
+	     		}
+     	    }
+	     	
+	     	// This is needed to remove title from Confirm dialog
+	        @Override
+	        public boolean onJsConfirm(WebView view, String url, String message, final android.webkit.JsResult result) {
+	            new DecoratedAlertDialogBuilder(ChecklistActivity.this)
+	            	.setTitle("")
+	            	.setCancelable(true)
+	            	.setOnCancelListener(new DialogInterface.OnCancelListener() {
+						@Override
+						public void onCancel(DialogInterface arg0) {
+	            			result.cancel();							
+						}
+	            	})
+	            	.setMessage(message)
+	            	.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+	            		public void onClick(DialogInterface dialog, int which) {
+	            			result.confirm();
+	            		}
+	            	})
+	            	.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+	            		public void onClick(DialogInterface dialog, int which) {
+	            			result.cancel();
+	            		}
+	            	})
+	            	.create()
+	            	.show();
+	            return true;
+	        }
+
+	    });
 
         // This is need on some old phones to get focus back to webview.
         mWebView.setOnTouchListener(new View.OnTouchListener() {
@@ -265,6 +314,16 @@ public class ChecklistFragment extends Fragment {
             mTimer = new Timer();
             TimerTask sim = new UpdateTask();
             mTimer.scheduleAtFixedRate(sim, 0, 1000);
+
+
+            /*
+             * To load a list from other activities
+             */
+            String overList = mService.getOverrideListName();
+            if(overList != null) {
+                mInfc.loadList(overList);
+                mService.setOverrideListName(null);
+            }
         }
 
         /*
@@ -345,10 +404,26 @@ public class ChecklistFragment extends Fragment {
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            if(msg.what == SHOW_BUSY) {
-                mProgressBarSearch.setVisibility(View.VISIBLE);
-            }
-            else if(msg.what == UNSHOW_BUSY) {
+    		if(msg.what == SHOW_BUSY) {
+    			mProgressBarSearch.setVisibility(View.VISIBLE);
+    		}
+    		else if(msg.what == UNSHOW_BUSY) {
+    			mProgressBarSearch.setVisibility(View.INVISIBLE);
+    		}
+    		else if(msg.what == MESSAGE) {
+    			// Show an important message
+    			DecoratedAlertDialogBuilder builder = new DecoratedAlertDialogBuilder(mContext);
+    			builder.setMessage((String)msg.obj)
+    			       .setCancelable(false)
+    			       .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+    			           public void onClick(DialogInterface dialog, int id) {
+    			                dialog.dismiss();
+    			           }
+    			});
+    			AlertDialog alert = builder.create();
+    			alert.show();
+    		}
+    		else if(msg.what == INIT) {
                 mProgressBarSearch.setVisibility(View.INVISIBLE);
             }
             else if(msg.what == MESSAGE) {

@@ -11,6 +11,7 @@ Redistribution and use in source and binary forms, with or without modification,
 */
 package com.ds.avare.fragment;
 
+
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -21,6 +22,8 @@ import com.ds.avare.utils.GenericCallback;
 import com.ds.avare.utils.Helper;
 import com.ds.avare.webinfc.WebAppPlanInterface;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -38,13 +41,24 @@ import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.view.Window;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.ProgressBar;
+
+import com.ds.avare.gps.GpsInterface;
+import com.ds.avare.utils.DecoratedAlertDialogBuilder;
+import com.ds.avare.utils.GenericCallback;
+import com.ds.avare.utils.Helper;
+import com.ds.avare.webinfc.WebAppPlanInterface;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * @author zkhan
@@ -160,41 +174,41 @@ public class PlanFragment extends Fragment {
                  * things might have changed.
                  * When both service and page loaded then proceed.
                  */
-                if(100 == progress) {
-                    mIsPageLoaded = true;
-                }
-            }
-
-            // This is needed to remove title from Confirm dialog
-            @Override
-            public boolean onJsConfirm(WebView view, String url, String message, final android.webkit.JsResult result) {
-                new AlertDialog.Builder(getContext())
-                        .setTitle("")
-                        .setMessage(message)
-                        // on cancel is needed for without it JS may hang
-                        .setCancelable(true)
-                        .setOnCancelListener(new DialogInterface.OnCancelListener() {
-                            @Override
-                            public void onCancel(DialogInterface arg0) {
-                                result.cancel();
-                            }
-                        })
-                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                result.confirm();
-                            }
-                        })
-                        .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                result.cancel();
-                            }
-                        })
-                        .create()
-                        .show();
-                return true;
-            }
-        });
-        mWebView.loadUrl(com.ds.avare.utils.Helper.getWebViewFile(getContext(), "plan"));
+	     		if(100 == progress) {
+	     			mIsPageLoaded = true;
+	     		}
+     	    }
+	     	
+	     	// This is needed to remove title from Confirm dialog
+	        @Override
+	        public boolean onJsConfirm(WebView view, String url, String message, final android.webkit.JsResult result) {
+	            new DecoratedAlertDialogBuilder(PlanActivity.this)
+	            	.setTitle("")
+	            	.setMessage(message)
+	            	// on cancel is needed for without it JS may hang
+	            	.setCancelable(true)
+	            	.setOnCancelListener(new DialogInterface.OnCancelListener() {
+						@Override
+						public void onCancel(DialogInterface arg0) {
+	            			result.cancel();							
+						}
+	            	})
+	            	.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+	            		public void onClick(DialogInterface dialog, int which) {
+	            			result.confirm();
+	            		}
+	            	})
+	            	.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+	            		public void onClick(DialogInterface dialog, int which) {
+	            			result.cancel();
+	            		}
+	            	})
+	            	.create()
+	            	.show();
+	            return true;
+	        }
+	    });
+        mWebView.loadUrl(com.ds.avare.utils.Helper.getWebViewFile(getApplicationContext(), "plan"));
 
         // This is need on some old phones to get focus back to webview.
         mWebView.setFocusable(true);
@@ -369,10 +383,32 @@ public class PlanFragment extends Fragment {
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            if(msg.what == SHOW_BUSY) {
-                mProgressBarSearch.setVisibility(View.VISIBLE);
-            }
-            else if(msg.what == UNSHOW_BUSY) {
+    		if(msg.what == SHOW_BUSY) {
+    			mProgressBarSearch.setVisibility(View.VISIBLE);
+    		}
+    		else if(msg.what == UNSHOW_BUSY) {
+    			mProgressBarSearch.setVisibility(View.INVISIBLE);
+    		}
+    		else if(msg.what == ACTIVE) {
+    			mActivateButton.setText(getString(R.string.Active));
+    		}
+    		else if(msg.what == INACTIVE) {
+    			mActivateButton.setText(getString(R.string.Inactive));
+    		}
+    		else if(msg.what == MESSAGE) {
+    			// Show an important message
+    			DecoratedAlertDialogBuilder builder = new DecoratedAlertDialogBuilder(mContext);
+    			builder.setMessage((String)msg.obj)
+    			       .setCancelable(false)
+    			       .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+    			           public void onClick(DialogInterface dialog, int id) {
+    			                dialog.dismiss();
+    			           }
+    			});
+    			AlertDialog alert = builder.create();
+    			alert.show();
+    		}
+    		else if(msg.what == INIT) {
                 mProgressBarSearch.setVisibility(View.INVISIBLE);
             }
             else if(msg.what == ACTIVE) {

@@ -18,7 +18,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.hardware.GeomagneticField;
-import android.util.Base64;
 
 import com.ds.avare.R;
 import com.ds.avare.place.Airport;
@@ -28,6 +27,7 @@ import com.ds.avare.place.Obstacle;
 import com.ds.avare.place.Runway;
 import com.ds.avare.plan.Cifp;
 import com.ds.avare.position.Coordinate;
+import com.ds.avare.position.LabelCoordinate;
 import com.ds.avare.position.Radial;
 import com.ds.avare.utils.Helper;
 import com.ds.avare.weather.AirSigMet;
@@ -37,11 +37,15 @@ import com.ds.avare.weather.Taf;
 import com.ds.avare.weather.WindsAloft;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.TreeMap;
 
 /**
@@ -57,10 +61,9 @@ public class DataBaseHelper  {
     private SQLiteDatabase mDataBaseProcedures;
     private SQLiteDatabase mDataBasePlates;
     private SQLiteDatabase mDataBaseGeoPlates;
-    private SQLiteDatabase mDataBaseFuel; 
-    private SQLiteDatabase mDataBaseRatings; 
-    private SQLiteDatabase mDataBaseWeather; 
-    
+    private SQLiteDatabase mDataBaseWeather;
+    private SQLiteDatabase mDataBaseGameTFRs;
+
     /*
      * Preferences
      */
@@ -80,9 +83,8 @@ public class DataBaseHelper  {
     private Integer mUsersGeoPlates;
     private Integer mUsersWeather;
     private Integer mUsersProcedures;
-    private Integer mUsersFuel;
-    private Integer mUsersRatings;
-    
+    private Integer mUsersGameTFRs;
+
     
     public  static final String  FACILITY_NAME = "Facility Name";
     private static final String  FACILITY_NAME_DB = "FacilityName";
@@ -92,7 +94,6 @@ public class DataBaseHelper  {
     private static final String  INFO_DB = "info";
     private static final int    LOCATION_ID_COL = 0;
     public  static final String  MAGNETIC_VARIATION = "Magnetic Variation";
-    //private static final String  MAGNETIC_VARIATION_DB = "MagneticVariation";
     private static final int    MAGNETIC_VARIATION_COL = 10;
     public  static final String  TYPE= "Type";
     private static final String  TYPE_DB = "Type";
@@ -104,7 +105,6 @@ public class DataBaseHelper  {
     private static final String  LONGITUDE_DB = "ARPLongitude";
     private static final int    LONGITUDE_COL = 2;
     public  static final String  FUEL_TYPES = "Fuel Types";
-    //private static final String  FUEL_TYPES_DB = "FuelTypes";
     private static final int    FUEL_TYPES_COL = 12;
     private static final int    CUSTOMS_COL = 13;
     private static final String  CUSTOMS = "Customs";
@@ -135,8 +135,7 @@ public class DataBaseHelper  {
     private static final String TABLE_PROCEDURE = "procedures";
     private static final String TABLE_GEOPLATES = "geoplates";
     private static final String TABLE_AIRWAYS = "airways";
-    private static final String TABLE_FUEL = "fuel";
-    private static final String TABLE_RATINGS = "ratings";
+    private static final String TABLE_GAME = "gametfr";
 
 
     /**
@@ -152,7 +151,7 @@ public class DataBaseHelper  {
      */
     public DataBaseHelper(Context context) {
         mPref = new Preferences(context);
-        mUsers = mUsersWeather = mUsersPlates = mUsersGeoPlates = mUsersProcedures = mUsersFuel = mUsersRatings = 0;
+        mUsers = mUsersWeather = mUsersPlates = mUsersGeoPlates = mUsersProcedures = mUsersGameTFRs = 0;
         mContext = context;
     }
 
@@ -301,7 +300,7 @@ public class DataBaseHelper  {
          * Limit to airports taken by array airports
          */
         String qry = "select * from " + TABLE_AIRPORTS + "," + TABLE_AIRPORT_RUNWAYS + " where ";
-        if(!mPref.shouldShowAllFacilities()) {
+        if(!mPref.isShowAllFacilities()) {
             qry += TABLE_AIRPORTS + "." + TYPE_DB + "=='AIRPORT' and ";
         }
 
@@ -424,7 +423,65 @@ public class DataBaseHelper  {
         return null;
         
     }
-    
+
+
+
+
+
+    public StringPreference getNavaidOrFixFromCoordinate(Coordinate c) {
+
+        Cursor cursor;
+
+        // Find FIX here first
+        String qry = "select * from " + TABLE_FIX + " where " +
+                "(" + LONGITUDE_DB + " - " + c.getLongitude() + ")*" +
+                "(" + LONGITUDE_DB + " - " + c.getLongitude() + ")+" +
+                "(" + LATITUDE_DB + " - " + c.getLatitude() + ")*" +
+                "(" + LATITUDE_DB + " - " + c.getLatitude() + ")"  + " < 0.0000000001;";
+        /*
+         * NAV
+         */
+        cursor = doQuery(qry, getMainDb());
+
+        try {
+            if(cursor != null) {
+                if(cursor.moveToFirst()) {
+                    StringPreference s = new StringPreference(Destination.FIX, cursor.getString(3), cursor.getString(4), cursor.getString(0));
+                    closes(cursor);
+                    return s;
+                }
+            }
+        }
+        catch (Exception e) {
+        }
+
+        closes(cursor);
+
+        qry = "select * from " + TABLE_NAV + " where " +
+                "(" + LONGITUDE_DB + " - " + c.getLongitude() + ")*" +
+                "(" + LONGITUDE_DB + " - " + c.getLongitude() + ")+" +
+                "(" + LATITUDE_DB + " - " + c.getLatitude() + ")*" +
+                "(" + LATITUDE_DB + " - " + c.getLatitude() + ")"  + " < 0.0000000001 and (Type != 'VOT');";
+
+        cursor = doQuery(qry, getMainDb());
+
+        try {
+            if(cursor != null) {
+                if(cursor.moveToFirst()) {
+                    StringPreference s = new StringPreference(Destination.NAVAID, cursor.getString(3), cursor.getString(4), cursor.getString(0));
+                    closes(cursor);
+                    return s;
+                }
+            }
+        }
+        catch (Exception e) {
+        }
+
+        closes(cursor);
+
+        return null;
+    }
+
     /**
      * Search with I am feeling lucky. Best guess
      * @param name
@@ -706,7 +763,7 @@ public class DataBaseHelper  {
         		qendK = " (" + LOCATION_ID_DB + " like '" + name.substring(1) + "%' " + ") order by " + LOCATION_ID_DB + " asc";
         	}
             qry = qbasic + TABLE_AIRPORTS + " where ";
-            if(!mPref.shouldShowAllFacilities()) {
+            if(!mPref.isShowAllFacilities()) {
                 qry += TYPE_DB + "=='AIRPORT' and ";
             }
             qry += qendK;
@@ -750,7 +807,7 @@ public class DataBaseHelper  {
         closes(cursor);
 
         qry = qbasic + TABLE_AIRPORTS + " where ";
-        if(!mPref.shouldShowAllFacilities()) {
+        if(!mPref.isShowAllFacilities()) {
             qry += TYPE_DB + "=='AIRPORT' and ";
         }
         qry += qend;
@@ -1441,7 +1498,7 @@ public class DataBaseHelper  {
                 + " (" + LATITUDE_DB + " - " + lat + ") * (" + LATITUDE_DB + " - " + lat + ")"
                 + ") as dist";
         String qry = "select " + LOCATION_ID_DB + asDist + " from " + TABLE_AIRPORTS;
-        if(!mPref.shouldShowAllFacilities()) {
+        if(!mPref.isShowAllFacilities()) {
             qry +=  " where " + TYPE_DB + "=='AIRPORT' and ";
         }
         else {
@@ -1874,7 +1931,7 @@ public class DataBaseHelper  {
                     taf = new Taf();
                     taf.rawText = cursor.getString(0);
                     taf.time = cursor.getString(1);
-                    taf.stationId = cursor.getString(1);
+                    taf.stationId = cursor.getString(2);
                 }
             }
         }
@@ -2540,59 +2597,58 @@ public class DataBaseHelper  {
         return points;
 	}
 
-	
-	
+    
     /**
-     * 
+     *
      * @param statement
      * @return
      */
-    private Cursor doQueryFuel(String statement, String name) {
+    private Cursor doQueryGameTFRs(String statement, String name) {
         Cursor c = null;
-        
+
         String path = mPref.mapsFolder() + "/" + name;
         if(!(new File(path).exists())) {
             return null;
         }
 
         /*
-         * 
+         *
          */
-        synchronized(mUsersFuel) {
-            if(mDataBaseFuel == null) {
-                mUsersFuel = 0;
+        synchronized(mUsersGameTFRs) {
+            if(mDataBaseGameTFRs == null) {
+                mUsersGameTFRs = 0;
                 try {
-                    
-                    mDataBaseFuel = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY | 
+
+                    mDataBaseGameTFRs = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY |
                             SQLiteDatabase.NO_LOCALIZED_COLLATORS);
                 }
                 catch(RuntimeException e) {
-                    mDataBaseFuel = null;
+                    mDataBaseGameTFRs = null;
                 }
             }
-            if(mDataBaseFuel == null) {
+            if(mDataBaseGameTFRs == null) {
                 return c;
             }
-            mUsersFuel++;
+            mUsersGameTFRs++;
         }
-        
+
         /*
          * In case we fail
          */
-        
-        if(mDataBaseFuel == null) {
+
+        if(mDataBaseGameTFRs == null) {
             return c;
         }
-        
-        if(!mDataBaseFuel.isOpen()) {
+
+        if(!mDataBaseGameTFRs.isOpen()) {
             return c;
         }
-        
+
         /*
          * Find with sqlite query
          */
         try {
-               c = mDataBaseFuel.rawQuery(statement, null);
+            c = mDataBaseGameTFRs.rawQuery(statement, null);
         }
         catch (Exception e) {
             c = null;
@@ -2601,58 +2657,74 @@ public class DataBaseHelper  {
         return c;
     }
 
-    
+
     /**
      * Close database
      */
-    private void closesFuel(Cursor c) {
+    private void closesGameTFRs(Cursor c) {
         try {
             if(null != c) {
                 c.close();
             }
         }
         catch (Exception e) {
-            
+
         }
 
-        synchronized(mUsersFuel) {
-            mUsersFuel--;
-            if((mDataBaseFuel != null) && (mUsersFuel <= 0)) {
+        synchronized(mUsersGameTFRs) {
+            mUsersGameTFRs--;
+            if((mDataBaseGameTFRs != null) && (mUsersGameTFRs <= 0)) {
                 try {
-                    mDataBaseFuel.close();
+                    mDataBaseGameTFRs.close();
                 }
-                
-                
+
+
                 catch (Exception e) {
                 }
-                mDataBaseFuel = null;
-                mUsersFuel = 0;
+                mDataBaseGameTFRs = null;
+                mUsersGameTFRs = 0;
             }
         }
     }
 
-    /**
-     * 
-     * @param name
-     * @return
-     */
-    public LinkedList<String> findFuelCost(String name) {
 
-    	LinkedList<String> ret = new LinkedList<String>();
-    	
-        String qry = "select * from " + TABLE_FUEL + " where airport =='" + name +"'" + 
-        		" order by reported desc limit 6";
-        Cursor cursor = doQueryFuel(qry, "fuel.db");
+    public LinkedList<LabelCoordinate> findGameTFRs() {
+        LinkedList<LabelCoordinate> ret = new LinkedList<LabelCoordinate>();
+
+        // Find -6 hours to +12 hours
+        Calendar begin = Calendar.getInstance();
+        Calendar end = Calendar.getInstance();
+        begin.add(Calendar.HOUR_OF_DAY, -6);
+        end.add(Calendar.HOUR_OF_DAY, 12);
+
+
+        // Game TFRs in EST
+        SimpleDateFormat formatterIso = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        formatterIso.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+        String bS = formatterIso.format(begin.getTime());
+        String eS = formatterIso.format(end.getTime());
+
+        SimpleDateFormat formatterZulu = new SimpleDateFormat("ddHH:mm'Z'");
+        formatterZulu.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+
+        String qry = "select * from " + TABLE_GAME + " where effective between '" + bS +  "' and '"  + eS + "'";
+
+
+
+        Cursor cursor = doQueryGameTFRs(qry, "gametfr.db");
+
         try {
             if(cursor != null) {
                 if(cursor.moveToFirst()) {
                     do {
-	                    /*
-	                     * Make entries to show
-	                     * 100LL 10.30 @ Chevron 2015-03-07
-	                     */
-	                	String tokens[] = cursor.getString(4).split(" ");
-	                	ret.add(cursor.getString(2) + " $" + cursor.getString(1)	+ " @ " + cursor.getString(3) + " " + tokens[0]);
+                        String date = cursor.getString(0);
+                        Date effective = formatterIso.parse(date);
+                        // print in zulu
+                        String toprint = formatterZulu.format(effective);
+
+                        LabelCoordinate c = new LabelCoordinate(cursor.getFloat(3), cursor.getFloat(2), toprint + " " + cursor.getString(1));
+                        ret.add(c);
                     }
                     while(cursor.moveToNext());
                 }
@@ -2660,131 +2732,8 @@ public class DataBaseHelper  {
         }
         catch (Exception e) {
         }
-        closesFuel(cursor);
+        closesGameTFRs(cursor);
         return ret;
     }
 
-    
-    /**
-     * 
-     * @param statement
-     * @return
-     */
-    private Cursor doQueryRatings(String statement, String name) {
-        Cursor c = null;
-        
-        String path = mPref.mapsFolder() + "/" + name;
-        if(!(new File(path).exists())) {
-            return null;
-        }
-
-        /*
-         * 
-         */
-        synchronized(mUsersRatings) {
-            if(mDataBaseRatings == null) {
-                mUsersRatings = 0;
-                try {
-                    
-                    mDataBaseRatings = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY | 
-                            SQLiteDatabase.NO_LOCALIZED_COLLATORS);
-                }
-                catch(RuntimeException e) {
-                    mDataBaseRatings = null;
-                }
-            }
-            if(mDataBaseRatings == null) {
-                return c;
-            }
-            mUsersRatings++;
-        }
-        
-        /*
-         * In case we fail
-         */
-        
-        if(mDataBaseRatings == null) {
-            return c;
-        }
-        
-        if(!mDataBaseRatings.isOpen()) {
-            return c;
-        }
-        
-        /*
-         * Find with sqlite query
-         */
-        try {
-               c = mDataBaseRatings.rawQuery(statement, null);
-        }
-        catch (Exception e) {
-            c = null;
-        }
-
-        return c;
-    }
-
-    
-    /**
-     * Close database
-     */
-    private void closesRatings(Cursor c) {
-        try {
-            if(null != c) {
-                c.close();
-            }
-        }
-        catch (Exception e) {
-            
-        }
-
-        synchronized(mUsersRatings) {
-            mUsersRatings--;
-            if((mDataBaseRatings != null) && (mUsersRatings <= 0)) {
-                try {
-                    mDataBaseRatings.close();
-                }
-                
-                
-                catch (Exception e) {
-                }
-                mDataBaseRatings = null;
-                mUsersRatings = 0;
-            }
-        }
-    }
-
-    
-    /**
-     * 
-     * @param name
-     * @return
-     */
-	public LinkedList<String> findRatings(String name) {
-    	LinkedList<String> ret = new LinkedList<String>();
-    	
-        String qry = "select * from " + TABLE_RATINGS + " where airport =='" + name +"'" + 
-        		" order by reported desc";
-        Cursor cursor = doQueryRatings(qry, "ratings.db");
-        try {
-            if(cursor != null) {
-                if(cursor.moveToFirst()) {
-                    do {
-	                    /*
-	                     * Make entries to show
-	                     * 4 star, userid (2015-03-07): Comments
-	                     */
-	                	String tokens[] = cursor.getString(4).split(" ");
-                        byte[] comments = Base64.decode(cursor.getString(3), Base64.URL_SAFE);
-	                	ret.add(cursor.getString(2) + " " + mContext.getString(R.string.Stars) + ", " + cursor.getString(0) + " (" + tokens[0] + "): " + new String(comments, "US-ASCII"));
-                    }
-                    while(cursor.moveToNext());
-                }
-            }
-        }
-        catch (Exception e) {
-        }
-        closesRatings(cursor);
-        return ret;
-	}
 }

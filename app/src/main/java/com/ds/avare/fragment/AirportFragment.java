@@ -16,6 +16,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.PorterDuff;
 import android.location.GpsStatus;
 import android.location.Location;
 import android.os.Bundle;
@@ -31,6 +32,7 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ListView;
 
 import com.ds.avare.R;
@@ -45,6 +47,7 @@ import com.ds.avare.place.Runway;
 import com.ds.avare.storage.DataBaseHelper;
 import com.ds.avare.storage.Preferences;
 import com.ds.avare.storage.StringPreference;
+import com.ds.avare.utils.DecoratedAlertDialogBuilder;
 import com.ds.avare.utils.Helper;
 import com.ds.avare.views.AfdView;
 
@@ -72,7 +75,7 @@ public class AirportFragment extends Fragment implements Observer {
     private AlertDialog mAirportPopup;
     private ArrayList<String> mListViews;
     private ArrayList<String> mListAirports;
-    private Button mCenterButton;
+    private ImageButton mCenterButton;
     private String mDestString;
     private String mNearString;
     private CoordinatorLayout mCoordinatorLayout;
@@ -138,8 +141,9 @@ public class AirportFragment extends Fragment implements Observer {
                         setViewFromPos(which);
                     }
                 };
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                //AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                
+                DecoratedAlertDialogBuilder builder = new DecoratedAlertDialogBuilder(AirportActivity.this);
                 int index = mService.getAfdIndex();
                 if(index >= mListViews.size()) {
                     index = 0;
@@ -166,7 +170,9 @@ public class AirportFragment extends Fragment implements Observer {
                     }
                 };
 
-                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+//                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                
+                DecoratedAlertDialogBuilder builder = new DecoratedAlertDialogBuilder(AirportActivity.this);
                 int index = mListAirports.indexOf(mService.getLastAfdAirport());
                 mAirportPopup = builder.setSingleChoiceItems(mListAirports.toArray(new String[mListAirports.size()]), index, onClickListener).create();
                 mAirportPopup.show();
@@ -174,8 +180,11 @@ public class AirportFragment extends Fragment implements Observer {
             }
         });
 
-        mCenterButton = (Button) view.findViewById(R.id.airport_button_center);
+//        mCenterButton = (Button) view.findViewById(R.id.airport_button_center);
+        mCenterButton = (ImageButton)view.findViewById(R.id.airport_button_center);
+>>>>>>> 0890ffac97fc1da498d517dc9c24c1ec0cc47fd9:app/src/main/java/com/ds/avare/AirportActivity.java
         mCenterButton.getBackground().setAlpha(255);
+        mCenterButton.getBackground().setColorFilter(0xFF444444, PorterDuff.Mode.MULTIPLY);
         mCenterButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -204,6 +213,7 @@ public class AirportFragment extends Fragment implements Observer {
         LinkedList<Runway> runways = mDestination.getRunways();
         String[] views = new String[map.size() + freq.size() + awos.size() + runways.size()];
         String[] values = new String[map.size() + freq.size() + awos.size() + runways.size()];
+        int[] categories = new int[map.size() + freq.size() + awos.size() + runways.size()];
         int iterator = 0;
         /*
          * Add header. Check below if this is not added twice
@@ -212,17 +222,20 @@ public class AirportFragment extends Fragment implements Observer {
         if(s != null) {
             views[iterator] = DataBaseHelper.LOCATION_ID;
             values[iterator] = s;
+            categories[iterator] = TypeValueAdapter.CATEGORY_LABEL;
             iterator++;
         }
         s = map.get(DataBaseHelper.FACILITY_NAME);
         if(s != null) {
             views[iterator] = DataBaseHelper.FACILITY_NAME;
+            categories[iterator] = TypeValueAdapter.CATEGORY_LABEL;
             values[iterator] = s;
             iterator++;
         }
         s = map.get(DataBaseHelper.FUEL_TYPES);
         if(s != null) {
             views[iterator] = DataBaseHelper.FUEL_TYPES;
+            categories[iterator] = TypeValueAdapter.CATEGORY_FUEL;
             values[iterator] = s;
             iterator++;
         }
@@ -260,6 +273,8 @@ public class AirportFragment extends Fragment implements Observer {
 
             // Add them all to our array
             values[iterator] = f1p1 + f2p2 + rem;
+            categories[iterator] = TypeValueAdapter.CATEGORY_FREQUENCY;
+
             iterator++;
         }
         /*
@@ -268,6 +283,7 @@ public class AirportFragment extends Fragment implements Observer {
         for(String key : freq.keySet()){
             views[iterator] = key;
             values[iterator] = freq.get(key);
+            categories[iterator] = TypeValueAdapter.CATEGORY_FREQUENCY;
             iterator++;
         }
         /*
@@ -286,13 +302,15 @@ public class AirportFragment extends Fragment implements Observer {
             views[iterator] = mRunwayName + " (" + run.getLength() + "'x" + run.getWidth() + "')";
             values[iterator] =
                     "DT: " + run.getThreshold() + ",\n" +
-                            "Elev: " + run.getElevation() + ",\n" +
-                            "Surf: " + run.getSurface() + ",\n" +
-                            "Ptrn: " + run.getPattern() + ",\n" +
-                            "ALS: " + run.getLights() + ",\n" +
-                            "ILS: " + run.getILS() + ",\n" +
-                            "VGSI: " + run.getVGSI()
-            ;
+                    "Elev: " + run.getElevation() + ",\n" +
+                    "Surf: " + run.getSurface() + ",\n" +
+                    "Ptrn: " + run.getPattern() + ",\n" +
+                    "ALS: " + run.getLights() + ",\n" +
+                    "ILS: " + run.getILS() + ",\n" +
+                    "VGSI: " + run.getVGSI()
+                    ;
+            categories[iterator] = TypeValueAdapter.CATEGORY_RUNWAYS;
+
             iterator++;
         }
 
@@ -305,13 +323,15 @@ public class AirportFragment extends Fragment implements Observer {
                 continue;
             }
             views[iterator] = key;
+            categories[iterator] = TypeValueAdapter.CATEGORY_ANY;
             values[iterator] = map.get(key);
             iterator++;
         }
 
         mAirportView.setClickable(false);
         mAirportView.setDividerHeight(10);
-        TypeValueAdapter tvAdapter = new TypeValueAdapter(getContext(), views, values);
+        //TypeValueAdapter tvAdapter = new TypeValueAdapter(getContext(), views, values);
+        TypeValueAdapter tvAdapter = new TypeValueAdapter(AirportActivity.this, views, values, categories, mPref.isNightMode());
         mAirportView.setAdapter(tvAdapter);
 
         mAirportView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
