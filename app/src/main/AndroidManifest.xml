@@ -42,6 +42,13 @@ Redistribution and use in source and binary forms, with or without modification,
         android:name="AvareApplication"
         android:theme="@style/AppTheme"
         android:allowBackup="true">
+        <service
+            android:name=".IWebsocketService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.ds.avare.START_SERVICE" />
+            </intent-filter>
+        </service>
 
         <activity android:name="org.acra.CrashReportDialog"
             android:theme="@style/Theme.Dialog"
