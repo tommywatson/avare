@@ -31,13 +31,16 @@ import java.util.LinkedList;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import com.google.gson.Gson;
 import static java.lang.Thread.sleep;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * Created by jimdevel on 10/18/2016.
  */
 
 public class IWebsocketService extends Service {
+    public static final int MIN_ALTITUDE = -1000;
     public static final int INTENSITY[] = {
             0x00000000,
             0x00000000,
@@ -50,6 +53,7 @@ public class IWebsocketService extends Service {
     };
     private StorageService mService;
     private JSONObject mGeoAltitude;
+    private Preferences mPref;
     WebSocketClient client;
     /* (non-Javadoc)
      * @see android.app.Activity#onCreate(android.os.Bundle)
@@ -68,7 +72,9 @@ public class IWebsocketService extends Service {
             StorageService.LocalBinder binder = (StorageService.LocalBinder)service;
             mService = binder.getService();
             mGeoAltitude = null;
-            connectWebSocket();
+            mPref = new Preferences(getApplicationContext());
+
+//            connectWebSocket();
         }
 
         /* (non-Javadoc)
@@ -80,8 +86,18 @@ public class IWebsocketService extends Service {
     };
     private void connectWebSocket() {
         URI uri;
+        String mConnectAddr;
+
+        if (mPref != null) {
+            mConnectAddr = mPref.getStratuxIpAddress();
+        }
+        else
+        {
+            mConnectAddr = "192.168.10.1";
+        }
+        String jsonAddr = "ws://" + mConnectAddr + "/jsonio";
         try {
-            uri = new URI("ws://192.168.0.2/jsonio");
+            uri = new URI(jsonAddr);
         } catch (URISyntaxException e) {
             e.printStackTrace();
             return;
@@ -121,6 +137,7 @@ public class IWebsocketService extends Service {
         mService = null;
         Intent intent = new Intent(this, StorageService.class);
         getApplicationContext().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+        mPref = new Preferences(getApplicationContext());
         connectWebSocket();
     }
 
@@ -545,6 +562,92 @@ public class IWebsocketService extends Service {
             return;
         }
     }
+/*
+    object.put("type", "ownship");
+    object.put("longitude", (double)om.mLon);
+    object.put("latitude", (double)om.mLat);
+    object.put("speed", (double)(om.mHorizontalVelocity));
+    object.put("bearing", (double)om.mDirection);
+    object.put("time", (long)om.getTime());
+    object.put("altitude", (double) om.mAltitude);
+
+ */
+    public void HandleSituationMessage(JSONObject object) {
+        try {
+
+            long timeticks = Helper.getMillisGMT();
+            Location l = new Location(LocationManager.GPS_PROVIDER);
+            l.setLongitude(object.getDouble("Lng"));
+            l.setLatitude(object.getDouble("Lat"));
+            l.setSpeed((float) object.getDouble("GroundSpeed"));
+            l.setBearing((float) object.getDouble("TrueCourse"));
+
+            // TODO: We need to covert time from the message
+            //l.setTime(object.getLong("time"));
+            l.setTime(timeticks);
+
+            // Choose most appropriate altitude. This is because people fly all sorts
+            // of equipment with or without altitudes
+            // convert all altitudes in feet
+            final double meterAltitude = (object.getDouble("Alt") * 0.3048);
+            final double pressureAltitude = meterAltitude * Preferences.heightConversion;
+            double deviceAltitude = MIN_ALTITUDE;
+            double geoAltitude = MIN_ALTITUDE;
+            // If geo altitude from adsb available, use it if not too old
+            if(mGeoAltitude != null) {
+                long t1 = System.currentTimeMillis();
+                long t2 = mGeoAltitude.getLong("time");
+                if((t1 - t2) < 10000) { // 10 seconds
+                    geoAltitude = mGeoAltitude.getDouble("Alt") * Preferences.heightConversion;
+                    if(geoAltitude < MIN_ALTITUDE) {
+                        geoAltitude = MIN_ALTITUDE;
+                    }
+                }
+            }
+            // If geo altitude from device available, use it if not too old
+            if(mService.getGpsParams() != null) {
+                long t1 = System.currentTimeMillis();
+                long t2 = mService.getGpsParams().getTime();
+                if ((t1 - t2) < 10000) { // 10 seconds
+                    deviceAltitude = mService.getGpsParams().getAltitude();
+                    if(deviceAltitude < MIN_ALTITUDE) {
+                        deviceAltitude = MIN_ALTITUDE;
+                    }
+                }
+            }
+
+            // choose best altitude. give preference to pressure altitude because that is
+            // the most correct for traffic purpose.
+            double alt = pressureAltitude;
+            if(alt <= MIN_ALTITUDE) {
+                alt = geoAltitude;
+            }
+            if(alt <= MIN_ALTITUDE) {
+                alt = deviceAltitude;
+            }
+            if(alt <= MIN_ALTITUDE) {
+                alt = MIN_ALTITUDE;
+            }
+
+            // set pressure altitude for traffic alerts
+            mService.getTrafficCache().setOwnAltitude((int) alt);
+
+            // For own height prefer geo altitude, do not use deviceAltitude here because
+            // we could get into rising altitude condition through feedback
+            alt = geoAltitude;
+            if(alt <= MIN_ALTITUDE) {
+                alt = pressureAltitude;
+            }
+            if(alt <= MIN_ALTITUDE) {
+                alt = MIN_ALTITUDE;
+            }
+            l.setAltitude(alt / Preferences.heightConversion);
+            mService.getGps().onLocationChanged(l, "ownship");
+
+        } catch (JSONException e) {
+            return;
+        }
+    }
 
     public Handler mHandlerWeb = new Handler() {
         @Override
@@ -561,8 +664,13 @@ public class IWebsocketService extends Service {
              */
             try {
                 JSONObject object = new JSONObject(text);
-
+                final Gson gson = new Gson();
                 String type = object.getString("Type");
+
+                if(type.equals("situation")) {
+                    HandleSituationMessage(object);
+                }
+
                 if(type.equals("Raw")) {
                     HandleRawDataMessage(object);
                 }
