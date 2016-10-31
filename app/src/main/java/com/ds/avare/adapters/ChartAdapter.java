@@ -368,7 +368,8 @@ public class ChartAdapter extends BaseExpandableListAdapter {
                     int[] groups = { GROUP_DATABASE, GROUP_WEATHER, GROUP_SECTIONAL,
                             GROUP_PLATE, GROUP_TAC, GROUP_AFD };
                     // select all elements
-                    for(group=0;group<groups.length;++group) {
+                    for(int g=0;g<groups.length;++g) {
+                        group=groups[g];
                         for (int i = 0; i < mChecked[group].length; ++i) {
                             mChecked[group][i] = STATE_CHECKED;
                         }
