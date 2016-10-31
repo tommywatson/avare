@@ -53,6 +53,9 @@ public class ChartAdapter extends BaseExpandableListAdapter {
     private String[][] mChildren;
     private int[][] mChecked;
     private String[][] mVers;
+
+    private long mDevTimeout = 0;
+    private long mDevCount = 0;
     
     static final int blocksize = 128;
     
@@ -65,14 +68,15 @@ public class ChartAdapter extends BaseExpandableListAdapter {
     private static final int GROUP_IFRHE = 6;
     private static final int GROUP_IFRA = 7;
     private static final int GROUP_PLATE = 8;
-    private static final int GROUP_AFD = 9;
-    private static final int GROUP_TERRAIN = 10;
-    private static final int GROUP_TOPO = 11;
-    private static final int GROUP_HELI = 12;
-    private static final int GROUP_ONC = 13;
-    private static final int GROUP_TPC = 14;
-    private static final int GROUP_MISC = 15;
-    private static final int GROUP_NUM = 16;
+    private static final int GROUP_VFRA = 9;
+    private static final int GROUP_AFD = 10;
+    private static final int GROUP_TERRAIN = 11;
+    private static final int GROUP_TOPO = 12;
+    private static final int GROUP_HELI = 13;
+    private static final int GROUP_ONC = 14;
+    private static final int GROUP_TPC = 15;
+    private static final int GROUP_MISC = 16;
+    private static final int GROUP_NUM = 17;
     
     /**
      * @param context
@@ -352,6 +356,29 @@ public class ChartAdapter extends BaseExpandableListAdapter {
         }
         else if(mChecked[group][child] == STATE_UNCHECKED) {
             mChecked[group][child] = STATE_CHECKED;                        
+        }
+
+        // download helper
+        if(group==GROUP_DATABASE&&child==0) {
+            long time=System.currentTimeMillis();
+            if(time<mDevTimeout) {
+                if(++mDevCount>=10) {
+                    mDevTimeout=0;
+                    // check all these groups
+                    int[] groups = { GROUP_DATABASE, GROUP_WEATHER, GROUP_SECTIONAL,
+                            GROUP_PLATE, GROUP_TAC, GROUP_AFD };
+                    // select all elements
+                    for(group=0;group<groups.length;++group) {
+                        for (int i = 0; i < mChecked[group].length; ++i) {
+                            mChecked[group][i] = STATE_CHECKED;
+                        }
+                    }
+                }
+            }
+            else {
+                mDevCount=1;
+                mDevTimeout=time+5000;
+            }
         }
     }
 
