@@ -27,12 +27,20 @@ import java.util.List;
 import java.util.concurrent.RunnableFuture;
 
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.os.Environment;
+import android.support.v7.app.AlertDialog;
 
+import com.ds.avare.AvareApplication;
+import com.ds.avare.R;
+import com.ds.avare.eabtools.EABTools;
 import com.ds.avare.gps.GpsParams;
 import com.ds.avare.shapes.CrumbsShape;
 import com.ds.avare.shapes.Shape;
+import com.ds.avare.utils.DecoratedAlertDialogBuilder;
 import com.ds.avare.utils.Helper;
+
+import static com.ds.avare.AvareApplication.*;
 
 /**
  * Class to record GPS Position information to a file formatted in KML suitable
@@ -198,6 +206,7 @@ public class KMLRecorder {
 				})).start();
 			}
 		}
+
 	}
 	
 	/**
@@ -375,6 +384,15 @@ public class KMLRecorder {
      */
     public void setGpsParams(GpsParams gpsParams) {
 
+		EABTools.location(gpsParams.getLatitude(),
+				gpsParams.getLongitude(),
+				gpsParams.getAltitude(),
+				gpsParams.getSpeed(),
+				gpsParams.getBearing(),
+				gpsParams.getDeclinition(),
+				gpsParams.getTime()
+		);
+
     	if(mWriter == null) {
     		// File closed means nothing to do
     		return;
@@ -434,4 +452,5 @@ public class KMLRecorder {
     public Shape getShape() {
        return mShape; 
     }
+
 }
