@@ -20,6 +20,7 @@ import android.media.MediaScannerConnection;
 import android.os.Binder;
 import android.os.IBinder;
 
+import com.ds.avare.adsb.TfrCache;
 import com.ds.avare.adsb.TrafficCache;
 import com.ds.avare.cap.DrawCapLines;
 import com.ds.avare.externalFlightPlan.ExternalPlanMgr;
@@ -46,6 +47,7 @@ import com.ds.avare.orientation.OrientationInterface;
 import com.ds.avare.place.Area;
 import com.ds.avare.place.Destination;
 import com.ds.avare.place.GameTFR;
+import com.ds.avare.place.Obstacle;
 import com.ds.avare.place.Plan;
 import com.ds.avare.position.Movement;
 import com.ds.avare.position.Pan;
@@ -57,7 +59,6 @@ import com.ds.avare.shapes.ShapeFileShape;
 import com.ds.avare.shapes.TFRShape;
 import com.ds.avare.shapes.TileMap;
 import com.ds.avare.storage.DataSource;
-import com.ds.avare.place.Obstacle;
 import com.ds.avare.userDefinedWaypoints.UDWMgr;
 import com.ds.avare.utils.BitmapHolder;
 import com.ds.avare.utils.InfoLines;
@@ -114,6 +115,8 @@ public class StorageService extends Service {
     private InternetWeatherCache mInternetWeatherCache;
     
     private AdsbWeatherCache mAdsbWeatherCache;
+
+    private TfrCache mAdsbTfrCache;
     
     private TrafficCache mTrafficCache;
     
@@ -194,8 +197,13 @@ public class StorageService extends Service {
     /*
      * A diagram bitmap
      */
-    private BitmapHolder mDiagramBitmap;                            
-        
+    private BitmapHolder mAfdDiagramBitmap;
+
+    /*
+     * A
+     */
+    private BitmapHolder mPlateDiagramBitmap;
+
     /**
      * Local binding as this runs in same thread
      */
@@ -348,12 +356,14 @@ public class StorageService extends Service {
         mIsGpsOn = false;
         mGpsCallbacks = new LinkedList<GpsInterface>();
         mOrientationCallbacks = new LinkedList<OrientationInterface>();
-        mDiagramBitmap = null;
+        mAfdDiagramBitmap = null;
+        mPlateDiagramBitmap = null;
         mAfdIndex = 0;
         mOverrideListName = null;
         mTrafficCache = new TrafficCache();
         mLocationSem = new Mutex();
         mAdsbWeatherCache = new AdsbWeatherCache(getApplicationContext(), this);
+        mAdsbTfrCache = new TfrCache(getApplicationContext());
         mLastPlateAirport = null;
         mLastPlateIndex = 0;
         mCheckLists = null;
@@ -363,7 +373,7 @@ public class StorageService extends Service {
         
         mInfoLines = new InfoLines(this);
 
-        mShadowedText = new ShadowedText(getApplicationContext());
+        mShadowedText = null;
 
         mDraw = new Draw();
         mPixelDraw = new PixelDraw();
@@ -604,9 +614,13 @@ public class StorageService extends Service {
          */
         mTiles.recycleBitmaps();
 
-        if(null != mDiagramBitmap) {
-            mDiagramBitmap.recycle();
-            mDiagramBitmap = null;
+        if(null != mAfdDiagramBitmap) {
+            mAfdDiagramBitmap.recycle();
+            mAfdDiagramBitmap = null;
+        }
+        if(null != mPlateDiagramBitmap) {
+            mPlateDiagramBitmap.recycle();
+            mPlateDiagramBitmap = null;
         }
         mTiles = null;
         
@@ -656,7 +670,7 @@ public class StorageService extends Service {
         return mTFRFetcher;
     }
 
-    public GameTFR getmGameTFRs() {
+    public GameTFR getGameTFRs() {
         return mGameTFRs;
     }
 
@@ -664,8 +678,8 @@ public class StorageService extends Service {
      *
      * @return
      */
-    public ShapeFetcher getShapeFetcher() {
-        return mShapeFetcher;
+    public TfrCache getAdsbTfrCache() {
+        return mAdsbTfrCache;
     }
 
     /**
@@ -680,6 +694,10 @@ public class StorageService extends Service {
      */
     public LinkedList<TFRShape> getTFRShapes() {
         return mTFRFetcher.getShapes();
+    }
+
+    public LinkedList<TFRShape> getAdsbTFRShapes() {
+        return mAdsbTfrCache.getShapes();
     }
 
     /**
@@ -846,19 +864,38 @@ public class StorageService extends Service {
      * 
      * @param name
      */
-    public void loadDiagram(String name) {
-        if(mDiagramBitmap != null) {
+    public void loadAfdDiagram(String name) {
+        if(mAfdDiagramBitmap != null) {
             /*
              * Clean old one first
              */
-            mDiagramBitmap.recycle();
-            mDiagramBitmap = null;
+            mAfdDiagramBitmap.recycle();
+            mAfdDiagramBitmap = null;
             System.gc();
         }
         if(null != name) {
-            mDiagramBitmap = new BitmapHolder(name);            
+            mAfdDiagramBitmap = new BitmapHolder(name);
         }
     }
+
+    /**
+     *
+     * @param name
+     */
+    public void loadPlateDiagram(String name) {
+        if(mPlateDiagramBitmap != null) {
+            /*
+             * Clean old one first
+             */
+            mPlateDiagramBitmap.recycle();
+            mPlateDiagramBitmap = null;
+            System.gc();
+        }
+        if(null != name) {
+            mPlateDiagramBitmap = new BitmapHolder(name);
+        }
+    }
+
 
     /**
      *
@@ -872,8 +909,16 @@ public class StorageService extends Service {
      * 
      * @return
      */
-    public BitmapHolder getDiagram() {
-       return mDiagramBitmap; 
+    public BitmapHolder getPlateDiagram() {
+       return mPlateDiagramBitmap;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public BitmapHolder getAfdDiagram() {
+        return mAfdDiagramBitmap;
     }
 
     /**
@@ -1217,6 +1262,9 @@ public class StorageService extends Service {
     }
     
     public ShadowedText getShadowedText() {
+        if (mShadowedText==null) {
+            mShadowedText = new ShadowedText(getApplicationContext());
+        }
     	return mShadowedText;
     }
     

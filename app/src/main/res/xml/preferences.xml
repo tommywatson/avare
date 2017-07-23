@@ -40,11 +40,6 @@ authors: zkhan, jlmcgraw
             android:key="@string/UDWLocation"
             android:summary="@string/UDWSummary"
             android:title="@string/UDWLabel" />
-        <EditTextPreference
-            android:defaultValue=""
-            android:key="@string/GeoCode"
-            android:summary="@string/GeoCodeSummary"
-            android:title="@string/GeoCodeLabel" />
         </PreferenceScreen>
 
     <PreferenceScreen 
@@ -277,6 +272,11 @@ authors: zkhan, jlmcgraw
             android:key="@string/ADSBTrafficFilter"
             android:summary="@string/ADSBTrafficFilterSummary"
             android:title="@string/ADSBTrafficFilterLabel" />
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="@string/prefShowAdsbCallSign"
+            android:summary="@string/ShowAdsbCallSignSummary"
+            android:title="@string/ShowAdsbCallSignLabel" />
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="@string/CAPGrid"
@@ -521,11 +521,6 @@ authors: zkhan, jlmcgraw
             android:key="@string/b2plate"
             android:summary="@string/b2plate"
             android:title="@string/b2plate" />
-
-        <CheckBoxPreference
-            android:key="@string/b3plate"
-            android:summary="@string/b3plate"
-            android:title="@string/b3plate" />
 
         <CheckBoxPreference
             android:defaultValue="false"

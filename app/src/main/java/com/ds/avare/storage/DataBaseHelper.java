@@ -65,10 +65,9 @@ public class DataBaseHelper  {
     /**
      * Cache this class to sqlite
      */
-    private SQLiteDatabase mDataBase; 
+    private SQLiteDatabase mDataBase;
     private SQLiteDatabase mDataBaseProcedures;
-    private SQLiteDatabase mDataBasePlates;
-    private SQLiteDatabase mDataBaseGeoPlates;
+    private SQLiteDatabase mDataBaseObstacles;
     private SQLiteDatabase mDataBaseWeather;
     private SQLiteDatabase mDataBaseGameTFRs;
 
@@ -87,10 +86,9 @@ public class DataBaseHelper  {
      * Will serve as a non blocking sem with synchronized statement
      */
     private Integer mUsers;
-    private Integer mUsersPlates;
-    private Integer mUsersGeoPlates;
     private Integer mUsersWeather;
     private Integer mUsersProcedures;
+    private Integer mUsersObstacles;
     private Integer mUsersGameTFRs;
 
     
@@ -169,7 +167,7 @@ public class DataBaseHelper  {
      */
     public DataBaseHelper(Context context) {
         mPref = new Preferences(context);
-        mUsers = mUsersWeather = mUsersPlates = mUsersGeoPlates = mUsersProcedures = mUsersGameTFRs = 0;
+        mUsers = mUsersWeather = mUsersProcedures = mUsersObstacles = mUsersGameTFRs = 0;
         mContext = context;
     }
 
@@ -1617,6 +1615,94 @@ public class DataBaseHelper  {
         return ret;
     }
 
+
+    /**
+     *
+     * @param statement
+     * @return
+     */
+    private Cursor doQueryObstacles(String statement, String name) {
+        Cursor c = null;
+
+        String path = mPref.mapsFolder() + "/" + name;
+        if(!(new File(path).exists())) {
+            return null;
+        }
+
+        /*
+         *
+         */
+        synchronized(mUsersObstacles) {
+            if(mDataBaseObstacles == null) {
+                mUsersObstacles = 0;
+                try {
+
+                    mDataBaseObstacles = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY |
+                            SQLiteDatabase.NO_LOCALIZED_COLLATORS);
+                }
+                catch(RuntimeException e) {
+                    mDataBaseObstacles = null;
+                }
+            }
+            if(mDataBaseObstacles == null) {
+                return c;
+            }
+            mUsersObstacles++;
+        }
+
+        /*
+         * In case we fail
+         */
+
+        if(mDataBaseObstacles == null) {
+            return c;
+        }
+
+        if(!mDataBaseObstacles.isOpen()) {
+            return c;
+        }
+
+        /*
+         * Find with sqlite query
+         */
+        try {
+            c = mDataBaseObstacles.rawQuery(statement, null);
+        }
+        catch (Exception e) {
+            c = null;
+        }
+
+        return c;
+    }
+
+    /**
+     * Close database
+     */
+    private void closesObstacles(Cursor c) {
+        try {
+            if(null != c) {
+                c.close();
+            }
+        }
+        catch (Exception e) {
+
+        }
+
+        synchronized(mUsersObstacles) {
+            mUsersObstacles--;
+            if((mDataBaseObstacles != null) && (mUsersObstacles <= 0)) {
+                try {
+                    mDataBaseObstacles.close();
+                }
+                catch (Exception e) {
+                }
+                mDataBaseObstacles = null;
+                mUsersObstacles = 0;
+            }
+        }
+    }
+
+
     public String findObstacle(String height, Destination dest) {
 
         String ret = null;
@@ -1632,7 +1718,7 @@ public class DataBaseHelper  {
         String qry = "select * from " + TABLE_OBSTACLES + " where Height =='" + height + "' and " + 
                 "(" + LATITUDE_DB  + " > " + (lat - Obstacle.RADIUS) + ") and (" + LATITUDE_DB  + " < " + (lat + Obstacle.RADIUS) + ") and " +
                 "(" + LONGITUDE_DB + " > " + (lon - Obstacle.RADIUS) + ") and (" + LONGITUDE_DB + " < " + (lon + Obstacle.RADIUS) + ");";
-        Cursor cursor = doQuery(qry, getMainDb());
+        Cursor cursor = doQueryObstacles(qry, "obs.db");
 
         try {
             if(cursor != null) {
@@ -1643,7 +1729,7 @@ public class DataBaseHelper  {
         }
         catch (Exception e) {
         }
-        closes(cursor);
+        closesObstacles(cursor);
         return ret;
     }
 
@@ -1841,7 +1927,7 @@ public class DataBaseHelper  {
          * Find obstacles at below or higher in lon/lat radius
          * We ignore all obstacles 500 AGL below in our script
          */
-        Cursor cursor = doQuery(qry, getMainDb());
+        Cursor cursor = doQueryObstacles(qry, "obs.db");
         
         try {
             if(cursor != null) {
@@ -1853,7 +1939,7 @@ public class DataBaseHelper  {
         catch (Exception e) {
         }
         
-        closes(cursor);
+        closesObstacles(cursor);
         return list;
     }
 
@@ -2325,283 +2411,7 @@ public class DataBaseHelper  {
         
         return new LinkedList<Cifp>(map.values());
     }
-    
-    /**
-     * 
-     * @param statement
-     * @return
-     */
-    private Cursor doQueryPlates(String statement, String name) {
-        Cursor c = null;
-        
-        String path = mPref.mapsFolder() + "/" + name;
-        if(!(new File(path).exists())) {
-            return null;
-        }
 
-        /*
-         * 
-         */
-        synchronized(mUsersPlates) {
-            if(mDataBasePlates == null) {
-                mUsersPlates = 0;
-                try {
-                    
-                    mDataBasePlates = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY | 
-                            SQLiteDatabase.NO_LOCALIZED_COLLATORS);
-                }
-                catch(RuntimeException e) {
-                    mDataBasePlates = null;
-                }
-            }
-            if(mDataBasePlates == null) {
-                return c;
-            }
-            mUsersPlates++;
-        }
-        
-        /*
-         * In case we fail
-         */
-        
-        if(mDataBasePlates == null) {
-            return c;
-        }
-        
-        if(!mDataBasePlates.isOpen()) {
-            return c;
-        }
-        
-        /*
-         * Find with sqlite query
-         */
-        try {
-               c = mDataBasePlates.rawQuery(statement, null);
-        }
-        catch (Exception e) {
-            c = null;
-        }
-
-        return c;
-    }
-
-    /**
-     * Close database
-     */
-    private void closesPlates(Cursor c) {
-        try {
-            if(null != c) {
-                c.close();
-            }
-        }
-        catch (Exception e) {
-            
-        }
-
-        synchronized(mUsersPlates) {
-            mUsersPlates--;
-            if((mDataBasePlates != null) && (mUsersPlates <= 0)) {
-                try {
-                    mDataBasePlates.close();
-                }
-                catch (Exception e) {
-                }
-                mDataBasePlates = null;
-                mUsersPlates = 0;
-            }
-        }
-    }
-
-    
-    /**
-     * 
-     * @param name
-     * @return
-     */
-    public HashMap<String, float[]> findPlatesMatrix(String name) {
-        
-        HashMap<String, float[]> ret = new HashMap<String, float[]>();
-        
-        String qry =
-                "select * from VisionFix" + " where AirportID='" + name + "';";
-        
-        Cursor cursor = doQueryPlates(qry, "geoplates.db");
-        
-        try {
-            if(cursor != null) {
-                if(cursor.moveToFirst()) {
-                    do {
-                        
-                        /*
-                         * Add to hash table, make transpose matrix from points
-                         */
-                        String plate = cursor.getString(0);
-                        plate = plate.substring(0, plate.lastIndexOf('.'));
-
-                        float x1 = cursor.getFloat(2);
-                        float y1 = cursor.getFloat(3);
-                        float lat1 = cursor.getFloat(4);
-                        float lon1 = cursor.getFloat(5);
-                        float x2 = cursor.getFloat(6);
-                        float y2 = cursor.getFloat(7);
-                        float lat2 = cursor.getFloat(8);
-                        float lon2 = cursor.getFloat(9);
-                        
-                        /*
-                         * Math to find px/py from two points on the plate
-                         */
-                        float px = (x1 - x2) / (lon1 - lon2);
-                        float py = (y1 - y2) / (lat1 - lat2); 
-                        
-                        float array[] = new float[12];
-                        array[0] = lon1 - x1 / px;
-                        array[1] = px;
-                        array[2] = lat1 - y1 / py;
-                        array[3] = py;
-                        
-                        ret.put(plate, array);
-         
-                    } while(cursor.moveToNext());
-                }
-            }
-        }
-        catch (Exception e) {
-        }
-        
-        closesPlates(cursor);
-        
-        if(ret.size() > 0) {
-            return ret;      
-        }
-        
-        return null;
-    }
-
-    /**
-     * 
-     * @param statement
-     * @return
-     */
-    private Cursor doQueryGeoPlates(String statement, String name) {
-        Cursor c = null;
-        
-        String path = mPref.mapsFolder() + "/" + name;
-        if(!(new File(path).exists())) {
-            return null;
-        }
-
-        /*
-         * 
-         */
-        synchronized(mUsersGeoPlates) {
-            if(mDataBaseGeoPlates == null) {
-                mUsersGeoPlates = 0;
-                try {
-                    
-                    mDataBaseGeoPlates = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY | 
-                            SQLiteDatabase.NO_LOCALIZED_COLLATORS);
-                }
-                catch(RuntimeException e) {
-                    mDataBaseGeoPlates = null;
-                }
-            }
-            if(mDataBaseGeoPlates == null) {
-                return c;
-            }
-            mUsersGeoPlates++;
-        }
-        
-        /*
-         * In case we fail
-         */
-        
-        if(mDataBaseGeoPlates == null) {
-            return c;
-        }
-        
-        if(!mDataBaseGeoPlates.isOpen()) {
-            return c;
-        }
-        
-        /*
-         * Find with sqlite query
-         */
-        try {
-               c = mDataBaseGeoPlates.rawQuery(statement, null);
-        }
-        catch (Exception e) {
-            c = null;
-        }
-
-        return c;
-    }
-
-    
-    /**
-     * Close database
-     */
-    private void closesGeoPlates(Cursor c) {
-        try {
-            if(null != c) {
-                c.close();
-            }
-        }
-        catch (Exception e) {
-            
-        }
-
-        synchronized(mUsersGeoPlates) {
-            mUsersGeoPlates--;
-            if((mDataBaseGeoPlates != null) && (mUsersGeoPlates <= 0)) {
-                try {
-                    mDataBaseGeoPlates.close();
-                }
-                
-                
-                catch (Exception e) {
-                }
-                mDataBaseGeoPlates = null;
-                mUsersGeoPlates = 0;
-            }
-        }
-    }
-
-    /**
-     * 
-     * @param name
-     * @return
-     */
-    public float[] findGeoPlateMatrix(String name) {
-        float ret[] = new float[4];
-        boolean found = false;
-        
-        String qry = "select * from " + TABLE_GEOPLATES + " where " + PROC + "=='" + name +"'";
-        Cursor cursor = doQueryGeoPlates(qry, "geoplates.db");
-        try {
-            if(cursor != null) {
-                if(cursor.moveToFirst()) {
-        
-                    /*
-                     * Database
-                     */
-                    ret[0] = cursor.getFloat(1);
-                    ret[1] = cursor.getFloat(2);
-                    ret[2] = cursor.getFloat(3);
-                    ret[3] = cursor.getFloat(4);
-                    found = true;
-                }
-            }
-        }
-        catch (Exception e) {
-        }
-        closesGeoPlates(cursor);
-
-        if(found == false) {
-            return null;
-        }
-        
-        return ret;
-    }
 
     /**
      * 

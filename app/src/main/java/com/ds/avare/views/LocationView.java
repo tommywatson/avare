@@ -111,6 +111,7 @@ public class LocationView extends View implements OnTouchListener {
     private BitmapHolder               mLineBitmap;
     private BitmapHolder               mLineHeadingBitmap;
     private BitmapHolder               mObstacleBitmap;
+
     /**
      * Gesture like long press, double touch outside of multi-touch
      */
@@ -217,6 +218,7 @@ public class LocationView extends View implements OnTouchListener {
 
     private ScaleGestureDetector mScaleDetector;
 
+    public LongTouchDestination getLongTouchDestination() {return mLongTouchDestination;}
 
     /**
      * @param context
@@ -275,7 +277,6 @@ public class LocationView extends View implements OnTouchListener {
         mLineHeadingBitmap = new BitmapHolder(context, R.drawable.line_heading);
         mRunwayBitmap = new BitmapHolder(context, R.drawable.runway_extension);
         mObstacleBitmap = new BitmapHolder(context, R.drawable.obstacle);
-
         mGestureDetector = new GestureDetector(context, new GestureListener());
         
         // We're going to give the user twice the slop as normal
@@ -534,7 +535,12 @@ public class LocationView extends View implements OnTouchListener {
      * @param ctx
      */
     private void drawTFR(Canvas canvas, DrawingContext ctx) {
-        TFRShape.draw(ctx, mService.getTFRShapes(), null == mPointProjection);
+        if(ctx.pref.useAdsbWeather()) {
+            TFRShape.draw(ctx, mService.getAdsbTFRShapes(), null == mPointProjection);
+        }
+        else {
+            TFRShape.draw(ctx, mService.getTFRShapes(), null == mPointProjection);
+        }
     }
 
     /**
@@ -552,7 +558,15 @@ public class LocationView extends View implements OnTouchListener {
      * @param ctx
      */
     private void drawAirSigMet(Canvas canvas, DrawingContext ctx) {
-        MetShape.draw(ctx, mService.getInternetWeatherCache().getAirSigMet(), null == mPointProjection);
+        /*
+         * Draw Air/Sigmet
+         */
+        if(ctx.pref.useAdsbWeather()) {
+            MetShape.draw(ctx, mService.getAdsbWeather().getAirSigMet(), null == mPointProjection);
+        }
+        else {
+            MetShape.draw(ctx, mService.getInternetWeatherCache().getAirSigMet(), null == mPointProjection);
+        }
     }
 
     /**
@@ -566,7 +580,7 @@ public class LocationView extends View implements OnTouchListener {
         }
 
         if(mLayerType.equals("Plate")) {
-            BitmapHolder b = mService.getDiagram();
+            BitmapHolder b = mService.getPlateDiagram();
 
             if(b == null || b.getBitmap() == null) {
                 return;
@@ -804,7 +818,7 @@ public class LocationView extends View implements OnTouchListener {
      */
     private void drawGameTFRs(DrawingContext ctx) {
         if(mPointProjection == null) {
-            mService.getmGameTFRs().draw(ctx);
+            mService.getGameTFRs().draw(ctx);
         }
 
     }
@@ -1353,8 +1367,12 @@ public class LocationView extends View implements OnTouchListener {
             LinkedList<TFRShape> shapes = null;
             List<AirSigMet> mets = null;
             if(null != mService) {
-                shapes = mService.getTFRShapes();
-                if(!mPref.useAdsbWeather()) {
+                if(mPref.useAdsbWeather()) {
+                    shapes = mService.getAdsbTFRShapes();
+                    mets = mService.getAdsbWeather().getAirSigMet();
+                }
+                else {
+                    shapes = mService.getTFRShapes();
                     mets = mService.getInternetWeatherCache().getAirSigMet();
                 }
             }
@@ -1378,7 +1396,7 @@ public class LocationView extends View implements OnTouchListener {
                     MetShape cshape = mets.get(i).shape;
                     if(null != cshape) {
                         /*
-                         * Set MET tfr
+                         * Set MET
                          */
                         textMets += cshape.getHTMLMetOnTouch(mContext, mets.get(i), lon, lat);
                     }
@@ -1467,6 +1485,7 @@ public class LocationView extends View implements OnTouchListener {
                  * Clear old weather
                  */
                 mService.getAdsbWeather().sweep();
+                mService.getAdsbTfrCache().sweep();
 
                 /*
                  * Do not background ADSB weather as its a RAM opertation and quick,
@@ -1479,6 +1498,7 @@ public class LocationView extends View implements OnTouchListener {
                     aireps = mService.getAdsbWeather().getAireps(lon, lat);
                     wa = mService.getAdsbWeather().getWindsAloft(lon, lat);
                     layer = mService.getAdsbWeather().getNexrad().getDate();
+                    sua = mService.getAdsbWeather().getSua();
                 }
                 else {
                     boolean inWeatherOld = mService.getInternetWeatherCache().isOld(mPref.getExpiryTime());
