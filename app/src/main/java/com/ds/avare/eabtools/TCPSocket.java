@@ -59,6 +59,7 @@ public class TCPSocket {
             }
             catch(Exception e) {
                 EABLog.print("e: "+e+":"+e.getMessage());
+                disconnect();
             }
         }
         else {
@@ -69,6 +70,10 @@ public class TCPSocket {
 
     int write(String string) {
         return string!=null?write(string.getBytes(),string.length()):-1;
+    }
+
+    public boolean connected() {
+        return socket!=null;
     }
 
 }

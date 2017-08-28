@@ -604,6 +604,11 @@ authors: zkhan, jlmcgraw
             android:summary="@string/PersistZoomSummary"
             android:title="@string/PersistZoomLabel" />
 
+        <CheckBoxPreference
+            android:key="@string/prefEABTools"
+            android:summary="@string/EABToolsSummary"
+            android:title="@string/EABToolsLabel" />
+
     </PreferenceScreen>
 
 

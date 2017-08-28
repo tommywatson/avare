@@ -11,6 +11,7 @@ Redistribution and use in source and binary forms, with or without modification,
 */
 package com.ds.avare.fragment;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.PorterDuff;
@@ -41,9 +42,14 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
 
+import com.ds.avare.AvareApplication;
 import com.ds.avare.ChartsDownloadActivity;
 import com.ds.avare.MainActivity;
 import com.ds.avare.R;
+import com.ds.avare.animation.TwoButton;
+import com.ds.avare.animation.TwoButton.TwoClickListener;
+import com.ds.avare.eabtools.EABLog;
+import com.ds.avare.eabtools.EABTools;
 import com.ds.avare.flight.FlightStatusInterface;
 import com.ds.avare.gps.Gps;
 import com.ds.avare.gps.GpsParams;
@@ -66,8 +72,10 @@ import com.ds.avare.touch.LongPressedDestination;
 import com.ds.avare.webinfc.WebAppMapInterface;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -218,9 +226,11 @@ public class LocationFragment extends StorageServiceGpsListenerFragment implemen
     }
 
     public void onBackPressed() {
+        EABLog.dump("OBP");
         /*
          * And may exit
          */
+
         mAlertDialogExit = new DecoratedAlertDialogBuilder(getContext()).create();
         mAlertDialogExit.setTitle(getString(R.string.Exit));
         mAlertDialogExit.setCanceledOnTouchOutside(true);
@@ -231,6 +241,7 @@ public class LocationFragment extends StorageServiceGpsListenerFragment implemen
                  * Go to background
                  */
                 setTrackState(false);   // ensure tracks are turned off
+                EABTools.stop();
                 getActivity().finish();
                 dialog.dismiss();
             }
@@ -245,6 +256,7 @@ public class LocationFragment extends StorageServiceGpsListenerFragment implemen
         });
 
         mAlertDialogExit.show();
+
     }
 
     @Override
@@ -289,6 +301,7 @@ public class LocationFragment extends StorageServiceGpsListenerFragment implemen
         if (null == mInitLocation) {
             mInitLocation = mPref.getLastLocation();
         }
+        EABTools.start(mPref);
     }
 
     @Override
@@ -692,6 +705,7 @@ public class LocationFragment extends StorageServiceGpsListenerFragment implemen
         }
     }
 
+
     private void setTrackState(boolean bState) {
         URI fileURI = mService.setTracks(bState);
         /* The fileURI is returned when the tracks are closed off.
@@ -722,6 +736,7 @@ public class LocationFragment extends StorageServiceGpsListenerFragment implemen
                 case 2:
                     /* Send it somewhere as KML. Let the user choose where.
                      */
+                    EABLog.dump("sts");
                     try {
                         Intent viewIntent = new Intent(Intent.ACTION_VIEW);
                         viewIntent.setDataAndType(Uri.fromFile(new File(fileURI.getPath())),

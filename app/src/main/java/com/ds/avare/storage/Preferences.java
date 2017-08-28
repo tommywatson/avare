@@ -1217,6 +1217,10 @@ public class Preferences {
             return 39;
         }
     }
+    public boolean getEABTools() {
+        return mPref.getBoolean(mContext.getString(R.string.prefEABTools), false);
+    }
+
 }
 
 

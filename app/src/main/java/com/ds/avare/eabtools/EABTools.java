@@ -1,5 +1,8 @@
 package com.ds.avare.eabtools;
 
+import com.ds.avare.R;
+import com.ds.avare.storage.Preferences;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,6 +16,11 @@ public class EABTools {
     private TCPSocket socket;
     private long track_id = EABUtils.time_t();
     private long lastConnect = 0;
+    private Preferences pref;
+
+    public static void start(Preferences mPref) {
+        singleton().pref=mPref;
+    }
 
     private static class Singleton {
         private static final EABTools singleton=new EABTools();
@@ -58,7 +66,7 @@ public class EABTools {
         synchronized(flightlog) {
             flightlog.add(pos);
         }
-        EABLog.print("Position "+pos.get());
+        //EABLog.print("Position "+pos.get());
         send();
     }
 
@@ -68,22 +76,45 @@ public class EABTools {
             lastConnect=now;
             (new Thread(new Runnable() {
                 public void run() {
-                    TCPSocket socket = new TCPSocket("eabtools.com", 6280);
-                    if (!socket.connect()) {
-                        // no connection...
-                        socket = null;
+                    try {
+                        TCPSocket socket = new TCPSocket("eabtools.com", 6280);
+                        if (!socket.connect()) {
+                            // no connection...
+                            socket = null;
+                        }
+                        singleton().socket = socket;
                     }
-                    singleton().socket=socket;
+                    catch(Exception e) {
+                        EABLog.print("[c] e: "+e);
+                    }
                 }
             })).start();
         }
     }
 
     public void send() {
-        if(flightlog.size()>=1) {
+        if(pref.getEABTools()&&flightlog.size()>=1) {
+            {
+                try {
+                    TCPSocket socket = this.socket;
+                    if (socket != null) {
+                        if (!socket.connected()) {
+                            this.socket = null;
+                            socket = null;
+                        }
+                    }
+                }
+                catch(Exception e) {
+                    EABLog.print("[sx] e: "+e);
+                    EABLog.restart();
+                }
+            }
+            final TCPSocket socket = this.socket;
             if(socket!=null) {
                 (new Thread(new Runnable() {
                     public void run() {
+                    EABDelta delta=new EABDelta();
+                    try {
                         while (flightlog.size() > 0) {
                             GPSPosition pos = null;
                             synchronized (flightlog) {
@@ -99,11 +130,16 @@ public class EABTools {
                                 } else {
                                     EABLog.print("Invalid write " + n + "/" + string.length());
                                     socket.disconnect();
-                                    socket = null;
                                     break;
                                 }
                             }
                         }
+                    }
+                    catch(Exception e) {
+                        EABLog.print("[s] e: "+e);
+                        EABLog.restart();
+                    }
+                    //EABLog.print("Thread runtime "+delta.delta()+"ms.");
                     }
                 })).start();
             }
@@ -111,6 +147,14 @@ public class EABTools {
                 connect();
             }
         }
+        else if(!pref.getEABTools()&&socket!=null) {
+            socket.disconnect();
+            socket=null;
+        }
+    }
+
+    public static boolean active() {
+        return singleton().pref!=null&&singleton().pref.getEABTools();
     }
 
 }

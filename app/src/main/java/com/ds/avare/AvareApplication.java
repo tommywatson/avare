@@ -14,6 +14,7 @@ package com.ds.avare;
 
 import android.app.Application;
 
+import com.ds.avare.eabtools.EABLog;
 import com.ds.avare.storage.Preferences;
 import com.ds.avare.utils.BitmapHolder;
 
@@ -35,6 +36,7 @@ public class AvareApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        EABLog.setContext(getApplicationContext());
 
         // The following line triggers the initialization of ACRA
         ACRA.init(this);

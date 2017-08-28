@@ -523,6 +523,9 @@ Redistribution and use in source and binary forms, with or without modification,
     <string name="PersistZoomSummary">&quot;Select to return to last zoom level when the application starts&quot;</string>
     <string name="prefPersistZoom">PersistZoom</string>
     <string name="prefZoomLevel">ZoomLevel</string>
+    <string name="prefEABTools">EABTools</string>
+    <string name="EABToolsLabel">EABTools flight tracking</string>
+    <string name="EABToolsSummary">EABTools flight tracking</string>
 
     <string name="Developer">Developer Settings</string>
     <string name="DeclareEmergency">Declare Emergency?</string>
