@@ -15,6 +15,7 @@ package com.ds.avare;
 
 import com.ds.avare.gps.GpsInterface;
 import com.ds.avare.utils.Helper;
+import me.stratux.stratuvare.R;
 
 import android.content.ComponentName;
 import android.content.Context;

@@ -18,7 +18,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.storage.Preferences;
 
 

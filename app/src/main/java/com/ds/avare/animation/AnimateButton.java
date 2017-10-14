@@ -11,7 +11,7 @@ Redistribution and use in source and binary forms, with or without modification,
 */
 package com.ds.avare.animation;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 
 import android.content.Context;
 import android.view.View;

@@ -18,7 +18,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.StorageService;
 import com.ds.avare.instruments.CDI;
 import com.ds.avare.instruments.Odometer;

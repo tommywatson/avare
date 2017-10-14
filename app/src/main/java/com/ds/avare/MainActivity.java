@@ -58,6 +58,7 @@ import com.ds.avare.utils.Emergency;
 import com.ds.avare.utils.Helper;
 import com.ds.avare.utils.NetworkHelper;
 import com.ds.avare.utils.Tips;
+import me.stratux.stratuvare.R;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -2,7 +2,7 @@ package com.ds.avare.utils;
 
 import android.content.Context;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.storage.Preferences;
 /*
 Copyright (c) 2014, Apps4Av Inc. (apps4av.com)

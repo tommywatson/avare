@@ -26,7 +26,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.adapters.TypeValueAdapter;
 import com.ds.avare.place.Airport;
 import com.ds.avare.place.Awos;

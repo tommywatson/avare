@@ -2,7 +2,7 @@ package com.ds.avare.navhandler;
 
 import android.support.v4.app.Fragment;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.fragment.LocationFragment;
 import com.ds.avare.fragment.ThreeDFragment;
 

@@ -12,7 +12,7 @@ Redistribution and use in source and binary forms, with or without modification,
 
 package com.ds.avare.utils;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 
 import android.graphics.Canvas;
 import android.graphics.Color;

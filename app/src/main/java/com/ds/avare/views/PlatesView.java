@@ -25,7 +25,7 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.View.OnTouchListener;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.StorageService;
 import com.ds.avare.gps.GpsParams;
 import com.ds.avare.position.Pan;

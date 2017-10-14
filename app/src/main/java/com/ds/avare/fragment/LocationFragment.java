@@ -43,7 +43,7 @@ import android.widget.ImageButton;
 
 import com.ds.avare.ChartsDownloadActivity;
 import com.ds.avare.MainActivity;
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.flight.FlightStatusInterface;
 import com.ds.avare.gps.Gps;
 import com.ds.avare.gps.GpsParams;

@@ -3,7 +3,7 @@ package com.ds.avare.utils;
 import android.app.ProgressDialog;
 import android.content.Context;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 
 public class ThemedProgressDialog extends ProgressDialog {
 

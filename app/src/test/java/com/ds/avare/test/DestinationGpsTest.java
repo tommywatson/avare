@@ -1,6 +1,6 @@
 package com.ds.avare.test;
 
-import com.ds.avare.AvareApplication;
+import com.ds.avare.StratuvareApplication;
 import com.ds.avare.BuildConfig;
 import com.ds.avare.StorageService;
 import com.ds.avare.place.Destination;
@@ -22,7 +22,7 @@ import static junit.framework.TestCase.assertEquals;
  */
 
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, application = AvareApplication.class)
+@Config(constants = BuildConfig.class, application = StratuvareApplication.class)
 @PowerMockIgnore({"org.mockito.", "org.robolectric."})
 @PrepareForTest({StorageService.class})
 public class DestinationGpsTest {

@@ -10,7 +10,7 @@ package com.ds.avare.threed.programs;
 
 import android.content.Context;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 
 import static android.opengl.GLES20.glGetAttribLocation;
 import static android.opengl.GLES20.glGetUniformLocation;

@@ -6,7 +6,7 @@ import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceFragmentCompat;
 import android.support.v7.preference.PreferenceScreen;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.utils.FolderPreferenceDialogFragment;
 import com.ds.avare.utils.RegisterActivityPreferenceDialogFragment;
 import com.ds.avare.utils.SyncActivityPreferenceDialogFragment;

@@ -23,7 +23,7 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 
 import com.ds.avare.MainActivity;
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 
 import java.io.File;
 import java.util.Arrays;

@@ -19,7 +19,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.hardware.GeomagneticField;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.place.Airport;
 import com.ds.avare.place.Awos;
 import com.ds.avare.place.Destination;

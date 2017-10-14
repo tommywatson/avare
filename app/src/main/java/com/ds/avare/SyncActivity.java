@@ -46,6 +46,7 @@ import com.google.android.gms.drive.DriveFile;
 import com.google.android.gms.drive.DriveId;
 import com.google.android.gms.drive.MetadataChangeSet;
 import com.google.android.gms.drive.OpenFileActivityBuilder;
+import me.stratux.stratuvare.R;
 
 import java.io.InputStream;
 import java.io.OutputStream;

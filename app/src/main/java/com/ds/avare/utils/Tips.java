@@ -14,7 +14,7 @@ package com.ds.avare.utils;
 
 import android.content.Context;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.storage.Preferences;
 
 /**

@@ -16,7 +16,7 @@ package com.ds.avare.shapes;
 import android.content.Context;
 import android.graphics.Color;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.weather.AirSigMet;
 
 import java.util.Date;

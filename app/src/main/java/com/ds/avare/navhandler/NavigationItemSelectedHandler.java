@@ -5,7 +5,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.view.Menu;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.fragment.SatelliteFragment;
 
 import java.util.Arrays;

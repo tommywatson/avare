@@ -32,7 +32,7 @@ import android.view.View.OnTouchListener;
 import android.view.ViewConfiguration;
 
 import com.ds.avare.MainActivity;
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.StorageService;
 import com.ds.avare.adsb.NexradBitmap;
 import com.ds.avare.adsb.Traffic;

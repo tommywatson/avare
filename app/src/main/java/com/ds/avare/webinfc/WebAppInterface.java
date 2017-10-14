@@ -18,7 +18,7 @@ import android.os.Message;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.StorageService;
 import com.ds.avare.fragment.WeatherFragment;
 import com.ds.avare.place.Destination;

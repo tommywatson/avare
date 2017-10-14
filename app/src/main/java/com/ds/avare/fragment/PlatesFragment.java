@@ -28,7 +28,7 @@ import android.widget.Chronometer;
 import android.widget.ImageButton;
 
 import com.ds.avare.MainActivity;
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.animation.TwoButton;
 import com.ds.avare.animation.TwoButton.TwoClickListener;
 import com.ds.avare.gps.GpsParams;

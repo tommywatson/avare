@@ -36,6 +36,7 @@ import com.ds.avare.storage.Preferences;
 import com.ds.avare.utils.DecoratedAlertDialogBuilder;
 import com.ds.avare.utils.OptionButton;
 import com.ds.avare.utils.PossibleEmail;
+import me.stratux.stratuvare.R;
 
 import java.util.ArrayList;
 import java.util.HashMap;
