@@ -10,7 +10,7 @@ package com.ds.avare.threed.programs;
 
 import android.content.Context;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 
 import static android.opengl.GLES20.GL_TEXTURE0;
 import static android.opengl.GLES20.GL_TEXTURE_2D;

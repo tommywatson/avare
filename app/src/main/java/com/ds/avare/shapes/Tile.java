@@ -16,7 +16,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.place.Boundaries;
 import com.ds.avare.position.Epsg900913;
 import com.ds.avare.storage.Preferences;

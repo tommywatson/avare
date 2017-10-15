@@ -20,7 +20,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.widget.ProgressBar;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.StorageService;
 import com.ds.avare.gps.GpsParams;
 import com.ds.avare.orientation.OrientationInterface;

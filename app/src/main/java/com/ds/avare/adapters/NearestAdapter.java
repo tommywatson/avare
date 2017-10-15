@@ -12,10 +12,7 @@ Redistribution and use in source and binary forms, with or without modification,
 package com.ds.avare.adapters;
 
 
-import com.ds.avare.R;
-import com.ds.avare.R.id;
-import com.ds.avare.R.layout;
-import com.ds.avare.R.string;
+import me.stratux.stratuvare.R;
 
 import android.content.Context;
 import android.view.LayoutInflater;

@@ -25,7 +25,7 @@ import android.widget.Button;
 import android.widget.ListView;
 
 import com.ds.avare.MainActivity;
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.adapters.NearestAdapter;
 import com.ds.avare.animation.AnimateButton;
 import com.ds.avare.gps.GpsParams;

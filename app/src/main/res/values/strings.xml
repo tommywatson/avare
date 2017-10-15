@@ -12,7 +12,7 @@ Redistribution and use in source and binary forms, with or without modification,
 <resources>
 	<string name="lang"></string>
     <string name="Stratuvare">&quot;Stratuvare&quot;</string>
-    <string name="title_activity_main">&quot;Avare&quot;</string>
+    <string name="title_activity_main">&quot;Stratuvare&quot;</string>
     <string name="MissingMaps">&quot;Download chart&quot;</string>
     <string name="MissingElevation">&quot;Download elevation chart&quot;</string>
     <string name="LoadingMaps">&quot;Loading Charts&quot;</string>

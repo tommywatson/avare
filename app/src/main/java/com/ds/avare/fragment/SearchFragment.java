@@ -31,7 +31,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 
 import com.ds.avare.MainActivity;
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.adapters.SearchAdapter;
 import com.ds.avare.animation.AnimateButton;
 import com.ds.avare.place.Destination;

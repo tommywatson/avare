@@ -25,7 +25,7 @@ import android.text.format.Time;
 import android.util.TypedValue;
 import android.view.WindowManager;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.shapes.TFRShape;
 import com.ds.avare.storage.Preferences;
 

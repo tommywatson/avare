@@ -68,6 +68,7 @@ import com.ds.avare.utils.ShadowedText;
 import com.ds.avare.utils.TimeConstants;
 import com.ds.avare.weather.AdsbWeatherCache;
 import com.ds.avare.weather.InternetWeatherCache;
+import me.stratux.stratuvare.R;
 
 import java.net.URI;
 import java.util.Iterator;

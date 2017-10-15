@@ -14,7 +14,7 @@ package com.ds.avare.utils;
 import android.content.Context;
 import android.telephony.SmsManager;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.StorageService;
 import com.ds.avare.gps.GpsParams;
 import com.ds.avare.place.Airport;

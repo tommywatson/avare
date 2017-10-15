@@ -5,7 +5,7 @@ All rights reserved.
 
 package com.ds.avare.utils;
 
-import com.ds.avare.BuildConfig;
+import me.stratux.stratuvare.BuildConfig;
 import com.ds.avare.storage.Preferences;
 
 import android.accounts.Account;

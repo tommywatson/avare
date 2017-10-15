@@ -41,6 +41,7 @@ import com.ds.avare.utils.DecoratedAlertDialogBuilder;
 import com.ds.avare.utils.Helper;
 import com.ds.avare.utils.ThemedProgressDialog;
 import com.ds.avare.utils.RateApp;
+import me.stratux.stratuvare.R;
 
 import java.io.File;
 

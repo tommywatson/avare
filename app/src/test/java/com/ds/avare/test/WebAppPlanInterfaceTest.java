@@ -3,7 +3,7 @@ package com.ds.avare.test;
 import android.content.Context;
 import android.location.Location;
 
-import com.ds.avare.AvareApplication;
+import com.ds.avare.StratuvareApplication;
 import com.ds.avare.BuildConfig;
 import com.ds.avare.place.Destination;
 import com.ds.avare.place.Plan;
@@ -36,7 +36,7 @@ import static org.robolectric.Shadows.shadowOf;
 
 
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, application = AvareApplication.class)
+@Config(constants = BuildConfig.class, application = StratuvareApplication.class)
 @PowerMockIgnore({"org.mockito.", "org.robolectric."})
 public class WebAppPlanInterfaceTest extends InterfaceTest {
 

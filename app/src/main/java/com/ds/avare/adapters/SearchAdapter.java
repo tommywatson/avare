@@ -20,7 +20,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.place.Destination;
 import com.ds.avare.storage.StringPreference;
 import com.ds.avare.utils.BitmapHolder;

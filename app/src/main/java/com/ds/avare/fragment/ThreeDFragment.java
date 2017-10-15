@@ -38,7 +38,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.ds.avare.MainActivity;
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.adsb.Traffic;
 import com.ds.avare.gps.GpsParams;
 import com.ds.avare.place.Obstacle;

@@ -21,7 +21,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 
 import java.util.regex.Pattern;
 

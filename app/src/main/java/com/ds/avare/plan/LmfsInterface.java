@@ -17,7 +17,7 @@ import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.ds.avare.R;
+import me.stratux.stratuvare.R;
 import com.ds.avare.message.NetworkHelper;
 import com.ds.avare.utils.PossibleEmail;
 
